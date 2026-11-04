@@ -2,7 +2,7 @@
 from behave import given
 
 from pages import BasePage, LoginPage, ProductPage, RegisterPage
-from support.helpers import page, product
+from helper_utility.helpers import page, product
 
 
 

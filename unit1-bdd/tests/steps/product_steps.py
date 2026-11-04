@@ -2,7 +2,7 @@
 from behave import then, when
 
 from pages import CatalogPage, ProductPage
-from support.helpers import page, product
+from helper_utility.helpers import page, product
 
 
 @when("the customer browses the full catalog")

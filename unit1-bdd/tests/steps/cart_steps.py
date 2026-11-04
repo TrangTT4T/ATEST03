@@ -3,7 +3,7 @@ from behave import given, then, use_step_matcher, when
 from selenium.webdriver.support import expected_conditions as EC
 
 from pages import CartPage, ProductPage, money_to_float
-from support.helpers import page, product
+from helper_utility.helpers import page, product
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')

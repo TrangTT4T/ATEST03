@@ -12,7 +12,7 @@ import sys
 from selenium import webdriver
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))  # makes pages/ and support/ importable from steps
+sys.path.insert(0, str(ROOT))  # makes pages/ and helper_utility/ importable from steps
 REPORTS = ROOT / "reports"
 SCREENSHOTS = REPORTS / "screenshots"
 
@@ -44,7 +44,7 @@ def before_all(context):
     context.browser_name = os.getenv("BROWSER", userdata.get("browser", "chrome"))
     context.headless = os.getenv("HEADLESS", userdata.get("headless", "true")).lower() == "true"
     context.timeout = int(userdata.get("timeout", "10"))
-    with open(ROOT / "shared" / "products.json", encoding="utf-8") as fh:  # same file in the Unit 2 repo
+    with open(ROOT / "dataset" / "products.json", encoding="utf-8") as fh:  # same file in the Unit 2 repo
         context.products = json.load(fh)["products"]
     SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 

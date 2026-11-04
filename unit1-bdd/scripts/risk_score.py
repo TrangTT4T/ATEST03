@@ -10,7 +10,7 @@ import csv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REGISTER = ROOT / "shared" / "risk_register.csv"
+REGISTER = ROOT / "dataset" / "risk_register.csv"
 OUTPUT = ROOT / "reports" / "risk_strategy.md"
 
 LEVELS = [(15, "Critical"), (10, "High"), (6, "Medium"), (0, "Low")]

@@ -19,7 +19,7 @@ Contents: Day 1 – Strategy · Day 2 – Architecture · Day 3 – Lab · Day 4
 
 Unit 1 · LO1 · Concept/Lecture · 120 min · Virtual
 
-> Note: the sample features in section 6 are the final, executable files from `features/` (checkout.feature and register.feature were added on Day 3). Section 7 shows the plan for Day 2–4 and marks what Day 3 added.
+> Note: the sample features in section 6 are the final, executable files from `tests/features/` (checkout.feature and register.feature were added on Day 3). Section 7 shows the plan for Day 2–4 and marks what Day 3 added.
 
 The Day 1 deliverable selects the five highest-risk business flows of Sauce Demo for automation first (cart, product, login, registration, search), specifies them in Gherkin, and sets up Python + behave + Selenium WebDriver as the base for Day 2–4 (Playwright is reserved for Unit 2, from Day 5).
 
@@ -153,7 +153,7 @@ Sauce Demo has medium testability: product data is stable and URLs are clear, bu
 | Controllability – setting up state | Medium      | No API to reset the cart; cart is stored in cookies                                               | Each scenario runs in a fresh browser context (clean cookies) via the `before_scenario` hook                                |
 | Observability – reading results    | Good        | Price, product name, "My Cart (n)", Sold Out label are all visible text                           | Assert on visible text; screenshot on failure in `after_step`                                                               |
 | Locators                           | Medium–weak | Old theme, no `data-testid`; standard Shopify names/classes may exist (e.g. the `/cart/add` form) | Prefer standard Shopify text/name locators (`By.LINK_TEXT`, `By.NAME`), then stable attributes; keep them in Page Objects   |
-| Test data                          | Good        | 7 products, fixed prices, 2 sold out                                                              | Keep in `shared/products.json`, never hard-coded in steps                                                                |
+| Test data                          | Good        | 7 products, fixed prices, 2 sold out                                                              | Keep in `dataset/products.json`, never hard-coded in steps                                                                |
 | URL identity                       | Trap        | Black heels handle is `flower-print-jeans`                                                        | Map name → handle in test data; never derive URLs from names                                                                |
 | Environment                        | Weak        | Only a shared production demo, no staging                                                         | No load testing; limit parallelism; tag account-creating cases `@data-creating`                                             |
 | External dependencies              | Weak        | Checkout and payment hosted by Shopify; Sauce widgets, social links                               | Stop at the checkout page; do not automate widgets; blocking third-party requests is left to Playwright in Unit 2 (Day 6–7) |
@@ -239,7 +239,7 @@ The eight requirements below cover every Critical, High and Medium risk chosen f
 | REQ-07 | As a new customer, I want to create an account                          | AC1 missing required fields show an error; AC2 valid data creates an account                              | R06  |
 | REQ-08 | As a customer, I want to search products by keyword                     | AC1 "jacket" returns Grey jacket and Noir jacket; AC2 an unknown keyword shows no results                 | R07  |
 
-#### 6.1 Sample feature – Cart (`features/cart.feature`)
+#### 6.1 Sample feature – Cart (`tests/features/cart.feature`)
 
 ```gherkin
 @cart @R01
@@ -281,7 +281,7 @@ Feature: Shopping cart
     Then the cart should be empty
 ```
 
-#### 6.2 Sample feature – Product and catalog (`features/product.feature`)
+#### 6.2 Sample feature – Product and catalog (`tests/features/product.feature`)
 
 ```gherkin
 @product
@@ -318,7 +318,7 @@ Feature: Product information
     Then the customer should not be able to add it to the cart
 ```
 
-#### 6.3 Sample feature – Login (`features/login.feature`)
+#### 6.3 Sample feature – Login (`tests/features/login.feature`)
 
 ```gherkin
 @login @R04
@@ -347,7 +347,7 @@ Feature: Customer login
     Then the password reset form should be shown
 ```
 
-#### 6.4 Sample feature – Search (`features/search.feature`)
+#### 6.4 Sample feature – Search (`tests/features/search.feature`)
 
 ```gherkin
 @search @R07 @medium
@@ -395,12 +395,12 @@ Traceability is automated through tags: every scenario carries `@REQ-xx` and `@R
 
 ```text
 sauce-demo-unit1-bdd/
-├── features/
-│   ├── cart.feature, product.feature, login.feature, search.feature, ...
+├── pages/                # Page Objects: home, catalog, product, cart, login, search
+├── tests/
+│   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # reusable step definitions
 │   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
-├── pages/                # Page Objects: home, catalog, product, cart, login, search
-├── shared/products.json      # test data (same file in the Unit 2 repo)
+├── dataset/products.json # test data (Unit 2 keeps a copy in shared/)
 ├── reports/              # HTML/JSON/Allure + failure screenshots
 ├── behave.ini
 └── requirements.txt      # behave, selenium, behave-html-formatter, allure-behave
@@ -456,12 +456,12 @@ The framework has 4 layers and each layer only knows the one below it: feature f
 
 | Layer            | File in the repo               | Responsibility                                                    | Must not contain         |
 |------------------|-----------------------------------------|-------------------------------------------------------------------|--------------------------|
-| Feature          | `features/*.feature`                    | Behaviour in business language, tags                              | Locators, URLs, waits    |
-| Step definitions | `features/steps/*.py`                   | Match Gherkin text, extract parameters, call Page Objects, assert | Locators, `find_element` |
+| Feature          | `tests/features/*.feature`                    | Behaviour in business language, tags                              | Locators, URLs, waits    |
+| Step definitions | `tests/steps/*.py`                   | Match Gherkin text, extract parameters, call Page Objects, assert | Locators, `find_element` |
 | Page Object      | `pages/*.py`                            | Locators and actions per page, explicit waits                     | Business assertions      |
 | Driver           | Selenium WebDriver                      | Drives Chrome/Firefox                                             | –                        |
-| Hooks            | `features/environment.py`               | Open/close the browser, skip tags, screenshot on failure          | Business logic           |
-| Config / data    | `behave.ini`, `shared/products.json` | Default tags, base_url, browser; product names, handles, prices   | –                        |
+| Hooks            | `tests/environment.py`               | Open/close the browser, skip tags, screenshot on failure          | Business logic           |
+| Config / data    | `behave.ini`, `dataset/products.json` | Default tags, base_url, browser; product names, handles, prices   | –                        |
 
 Folder structure:
 
@@ -469,21 +469,22 @@ Folder structure:
 sauce-demo-unit1-bdd/
 ├── behave.ini                 # config: default tags, userdata, formatters
 ├── requirements.txt           # behave, selenium, behave-html-formatter, allure-behave
-├── features/
-│   ├── cart.feature           # REQ-01, REQ-02
-│   ├── login.feature          # REQ-05
-│   ├── environment.py         # hooks
-│   └── steps/
-│       ├── common_steps.py    # shared navigation
-│       ├── cart_steps.py
-│       └── account_steps.py
 ├── pages/                     # BasePage, ProductPage, CartPage, CatalogPage, LoginPage
-├── support/helpers.py         # page(), product(): helpers shared by steps
-├── shared/products.json      # test data (same file in the Unit 2 repo)
+├── tests/                     # behave.ini: paths = tests
+│   ├── features/
+│   │   ├── cart.feature       # REQ-01, REQ-02
+│   │   └── login.feature      # REQ-05
+│   ├── steps/
+│   │   ├── common_steps.py    # shared navigation
+│   │   ├── cart_steps.py
+│   │   └── account_steps.py
+│   └── environment.py         # hooks
+├── helper_utility/helpers.py  # page(), product(): helpers shared by steps
+├── dataset/products.json      # test data (Unit 2 keeps a copy in shared/)
 └── reports/
 ```
 
-Why `support/helpers.py` lives outside `features/steps/`: behave loads every file in `steps/` itself; if one step file imports another, its `@given/@when/@then` decorators run twice and behave raises `AmbiguousStep`.
+Why `helper_utility/helpers.py` lives outside `tests/steps/`: behave loads every file in `steps/` itself; if one step file imports another, its `@given/@when/@then` decorators run twice and behave raises `AmbiguousStep`.
 
 <img src="images/day2_architecture_en.png" style="width:6in;height:4.25893in" alt="sauce-demo-unit1-bdd architecture · 5 layers + hooks + config" />
 
@@ -503,7 +504,7 @@ Each feature file covers one business capability; Feature-level tags apply to ev
 | `Scenario Outline` + `Examples`     | Same behaviour, several data sets              | 2 × Noir jacket, 3 × Striped top          |
 | `@tag`                              | Classifying for filtering and traceability     | `@REQ-01 @critical @smoke`                |
 
-`features/cart.feature`:
+`tests/features/cart.feature`:
 
 ```gherkin
 @cart @R01
@@ -545,7 +546,7 @@ Feature: Shopping cart
     Then the cart should be empty
 ```
 
-`features/login.feature` (shows `Background` and negative cases):
+`tests/features/login.feature` (shows `Background` and negative cases):
 
 ```gherkin
 @login @R04
@@ -589,14 +590,14 @@ Each Gherkin line matches exactly one Python function through `@given / @when / 
 | `"{expected}"`       | `"£55.00"`      | string, converted with `money_to_float()`      |
 | `re` matcher (Day 4) | `items?`        | regex when singular/plural variants are needed |
 
-#### 3.2 Code: `features/steps/cart_steps.py`
+#### 3.2 Code: `tests/steps/cart_steps.py`
 
 ```python
 """Cart steps (REQ-01, REQ-02)."""
 from behave import given, then, when
 
 from pages import CartPage, ProductPage, money_to_float
-from support.helpers import page, product
+from helper_utility.helpers import page, product
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
@@ -637,7 +638,7 @@ def step_cart_total(context, expected):
     assert actual == money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 ```
 
-#### 3.3 Shared helpers: `support/helpers.py`
+#### 3.3 Shared helpers: `helper_utility/helpers.py`
 
 ```python
 def product(context, name):
@@ -645,7 +646,7 @@ def product(context, name):
     try:
         return context.products[name]
     except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to shared/products.json")
+        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
 
 
 def page(context, cls):
@@ -689,7 +690,7 @@ Step-writing rules:
 
 - No locators in steps; every locator lives in `pages/`.
 
-- Data (handles, prices) comes from `shared/products.json`, never hard-coded.
+- Data (handles, prices) comes from `dataset/products.json`, never hard-coded.
 
 - Every assert says what was expected and what was found, so reports are readable.
 
@@ -699,7 +700,7 @@ Step-writing rules:
 
 ### 4. Hooks
 
-Hooks live in `features/environment.py` and handle all setup and teardown, so features and steps only talk about the business. The Day 2 framework uses 4 hooks.
+Hooks live in `tests/environment.py` and handle all setup and teardown, so features and steps only talk about the business. The Day 2 framework uses 4 hooks.
 
 The order in which behave calls hooks during one run:
 
@@ -722,7 +723,7 @@ The order in which behave calls hooks during one run:
 | `after_step`      | Failed step → screenshot into `reports/screenshots/`, attached to Allure                                             | Evidence to classify product vs script defects              |
 | `after_scenario`  | Quits the browser                                                                                                    | No leaked resources, no shared state                        |
 
-Code: `features/environment.py`
+Code: `tests/environment.py`
 
 ```python
 import json
@@ -734,7 +735,7 @@ from pathlib import Path
 from selenium import webdriver
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))  # makes pages/ and support/ importable from steps
+sys.path.insert(0, str(ROOT))  # makes pages/ and helper_utility/ importable from steps
 SCREENSHOTS = ROOT / "reports" / "screenshots"
 
 
@@ -757,7 +758,7 @@ def before_all(context):
     context.browser_name = os.getenv("BROWSER", userdata.get("browser", "chrome"))
     context.headless = os.getenv("HEADLESS", userdata.get("headless", "true")).lower() == "true"
     context.timeout = int(userdata.get("timeout", "10"))
-    with open(ROOT / "shared" / "products.json", encoding="utf-8") as fh:
+    with open(ROOT / "dataset" / "products.json", encoding="utf-8") as fh:
         context.products = json.load(fh)["products"]
     SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
@@ -818,7 +819,7 @@ behave --tags="@data-creating or not @data-creating"  # everything, overriding t
 
 ```ini
 [behave]
-paths = features
+paths = tests
 # Default filter: never run manual, work-in-progress or data-creating scenarios.
 tags = not @manual and not @wip and not @data-creating
 show_skipped = false
@@ -872,7 +873,7 @@ cd sauce-demo-unit1-bdd
 pip install -r requirements.txt
 behave --dry-run                 # 1. is every step implemented? (no browser)
 behave --tags=@smoke             # 2. smoke: 1 scenario
-behave features/cart.feature features/login.feature   # 3. Day 2 scope: 8 scenarios
+behave tests/features/cart.feature tests/features/login.feature   # 3. Day 2 scope: 8 scenarios
 behave -D headless=false         # watch the browser
 ```
 
@@ -916,14 +917,14 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 
 | Added | File | Purpose |
 | --- | --- | --- |
-| Checkout spec | `features/checkout.feature` | REQ-03, R02 Critical, stops at the checkout page |
-| Product and catalog spec | `features/product.feature` | REQ-04, REQ-06: 7-row Examples table, sold-out case |
-| Registration spec | `features/register.feature` | REQ-07: negative case + `@data-creating` positive case |
-| Search spec | `features/search.feature` | REQ-08: results / no results |
-| New steps | `features/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
+| Checkout spec | `tests/features/checkout.feature` | REQ-03, R02 Critical, stops at the checkout page |
+| Product and catalog spec | `tests/features/product.feature` | REQ-04, REQ-06: 7-row Examples table, sold-out case |
+| Registration spec | `tests/features/register.feature` | REQ-07: negative case + `@data-creating` positive case |
+| Search spec | `tests/features/search.feature` | REQ-08: results / no results |
+| New steps | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
 | One-command runner | `run.py` | Tests + all reports + traceability |
 | Traceability | `scripts/traceability.py` | REQ → Risk → feature → scenario → result, from `@REQ-xx` / `@Rxx` tags |
-| Shared data | `shared/products.json`, `shared/requirements.json` | Same data and requirement list for Unit 1 and Unit 2 |
+| Shared data | `dataset/products.json`, `dataset/requirements.json` | Same data and requirement list for Unit 1 and Unit 2 |
 
 ### 2. Executable specifications
 
@@ -936,7 +937,7 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 | `register.feature` | Rejected without email; Succeeds with valid details | REQ-07 | R06 Medium | `@negative`; `@data-creating` (excluded by default) |
 | `search.feature` | Matching products; No matching products | REQ-08 | R07 Medium | `@regression`, `@negative` |
 
-Example of a data-driven spec (`features/product.feature`):
+Example of a data-driven spec (`tests/features/product.feature`):
 
 ```gherkin
 @REQ-06 @R05 @high @regression
@@ -952,7 +953,7 @@ Scenario Outline: Catalog shows correct price and stock status
     | White sandals  | sold out  |
 ```
 
-The price is not repeated in the feature: the step reads it from `shared/products.json`, so a price change is edited in one place.
+The price is not repeated in the feature: the step reads it from `dataset/products.json`, so a price change is edited in one place.
 
 ### 3. Reusable steps
 
@@ -1006,7 +1007,7 @@ Verified against a local Shopify-structured mock of the store. On the live Sauce
 
 1. Add a scenario for REQ-02: changing the quantity to 0 removes the line. Which existing steps can you reuse?
 2. Add an `@REQ-08` scenario that searches for "JACKET" (upper case). Does the traceability matrix pick it up without code changes?
-3. Break one price in `shared/products.json`, run `python run.py`, and find the failure screenshot.
+3. Break one price in `dataset/products.json`, run `python run.py`, and find the failure screenshot.
 
 ---
 
@@ -1021,7 +1022,7 @@ The Day 3 framework scores 15/16 on the review rubric after the fixes made durin
 ```bash
 cd sauce-demo-unit1-bdd
 python scripts/bdd_review.py .     # automated rubric checks, exit code 1 when anything is found
-python scripts/risk_score.py       # re-check scope against the risk register (shared/risk_register.csv)
+python scripts/risk_score.py       # re-check scope against the risk register (dataset/risk_register.csv)
 python run.py                      # results + traceability matrix
 ```
 
@@ -1044,8 +1045,8 @@ python run.py                      # results + traceability matrix
 | Declarative Gherkin | 0 imperative steps | 2 |
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
 | Step reuse | 0 unused, 0 ambiguous, 0 near-duplicates after F1 | 2 |
-| Traceability | 8/8 requirements, every scenario tagged; one requirement list (`shared/requirements.json`) after F5 | 2 |
-| Data separated from code | Names, handles, prices in `shared/products.json` / Examples | 2 |
+| Traceability | 8/8 requirements, every scenario tagged; one requirement list (`dataset/requirements.json`) after F5 | 2 |
+| Data separated from code | Names, handles, prices in `dataset/products.json` / Examples | 2 |
 | Reporting | HTML, JSON, JUnit, Allure, screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
 | **Total** | | **15 / 16** |
@@ -1054,11 +1055,11 @@ python run.py                      # results + traceability matrix
 
 | ID | Finding | Action | Status |
 | --- | --- | --- | --- |
-| F1 | `the cart should contain {count:d} item` and `... items` were two definitions | Merged into one regex step `items?` in `features/steps/cart_steps.py` | Fixed |
+| F1 | `the cart should contain {count:d} item` and `... items` were two definitions | Merged into one regex step `items?` in `tests/steps/cart_steps.py` | Fixed |
 | F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
 | F3 | Stability not measured on the live site | Run `python run.py` 3 times; Unit 2 automates this (`run.py stability`) | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
-| F5 | Requirement list duplicated in `traceability.py` and the Day 1 document | Moved to `shared/requirements.json`, read by Unit 1 and Unit 2 | Fixed |
+| F5 | Requirement list duplicated in `traceability.py` and the Day 1 document | Moved to `dataset/requirements.json`, read by Unit 1 and Unit 2 | Fixed |
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
@@ -1090,7 +1091,7 @@ use_step_matcher("parse")
 | Unit 1 result | How Unit 2 uses it |
 | --- | --- |
 | Feature files | Run unchanged on Playwright via pytest-bdd |
-| `shared/` data and requirements | Copied into the Unit 2 repo, plus REQ-09 and REQ-10 |
+| `dataset/` data and requirements | Copied into the Unit 2 repo, plus REQ-09 and REQ-10 |
 | Page Object pattern | Same class names, Playwright locators |
 | Review script | `run.py review` in the Unit 2 repo runs it, then adds Playwright stability checks |
 | Open F3 (stability) | Automated flaky detection on Day 8 |

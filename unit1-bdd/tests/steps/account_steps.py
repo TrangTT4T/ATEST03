@@ -4,7 +4,7 @@ import uuid
 from behave import then, when
 
 from pages import LoginPage, RegisterPage
-from support.helpers import page
+from helper_utility.helpers import page
 
 
 @when('the customer logs in with email "{email}" and password "{password}"')

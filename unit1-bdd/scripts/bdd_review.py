@@ -34,13 +34,21 @@ class RegexMatcher:
         return self.rx.fullmatch(text)
 
 
+def features_dir(root: Path) -> Path:
+    """Unit 1 keeps feature files in tests/features; Unit 2 in features/."""
+    for candidate in (root / "tests" / "features", root / "features"):
+        if candidate.is_dir():
+            return candidate
+    raise SystemExit(f"No feature files found under {root}")
+
+
 def load_features(root: Path):
-    return [parse_file(str(p)) for p in sorted((root / "features").glob("*.feature"))]
+    return [parse_file(str(p)) for p in sorted(features_dir(root).glob("*.feature"))]
 
 
 def steps_dir(root: Path) -> Path:
-    """behave keeps steps in features/steps; pytest-bdd (Unit 2) in tests/step_defs."""
-    for candidate in (root / "features" / "steps", root / "tests" / "step_defs"):
+    """Unit 1 (behave) keeps steps in tests/steps; Unit 2 (pytest-bdd) in tests/step_defs."""
+    for candidate in (root / "tests" / "steps", root / "features" / "steps", root / "tests" / "step_defs"):
         if candidate.is_dir():
             return candidate
     raise SystemExit(f"No step definitions found under {root}")

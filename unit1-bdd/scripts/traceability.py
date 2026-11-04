@@ -13,13 +13,13 @@ from pathlib import Path
 from behave.parser import parse_file
 
 ROOT = Path(__file__).resolve().parent.parent
-FEATURES = ROOT / "features"
+FEATURES = ROOT / "tests" / "features"
 RESULTS = ROOT / "reports" / "results.json"
 OUT_MD = ROOT / "reports" / "traceability.md"
 OUT_CSV = ROOT / "reports" / "traceability.csv"
 
 # Requirement catalogue (same file in the Unit 2 repo) (Day 4 finding F5: one source, no drift).
-_CATALOGUE = json.loads((ROOT / "shared" / "requirements.json").read_text(encoding="utf-8"))["requirements"]
+_CATALOGUE = json.loads((ROOT / "dataset" / "requirements.json").read_text(encoding="utf-8"))["requirements"]
 REQUIREMENTS = {k: (v["title"], v["risk"], v["level"]) for k, v in _CATALOGUE.items() if v["unit"] == 1}
 
 

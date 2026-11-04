@@ -19,7 +19,7 @@ Nội dung: Day 1 – Chiến lược · Day 2 – Kiến trúc · Day 3 – Lab
 
 Unit 1 · LO1 · Concept/Lecture · 120 phút · Virtual
 
-> Ghi chú: các feature mẫu ở mục 6 là bản cuối, chạy được, lấy từ `features/` (checkout.feature và register.feature được thêm ở Day 3). Mục 7 là kế hoạch cho Day 2–4 và ghi rõ phần Day 3 thêm vào.
+> Ghi chú: các feature mẫu ở mục 6 là bản cuối, chạy được, lấy từ `tests/features/` (checkout.feature và register.feature được thêm ở Day 3). Mục 7 là kế hoạch cho Day 2–4 và ghi rõ phần Day 3 thêm vào.
 
 Bài Day 1 chọn 5 luồng nghiệp vụ rủi ro cao nhất của Sauce Demo để tự động hóa trước (giỏ hàng, sản phẩm, đăng nhập, đăng ký, tìm kiếm), viết đặc tả bằng Gherkin và dùng Python + behave + Selenium WebDriver làm nền cho Day 2–4 (Playwright để dành cho Unit 2, từ Day 5).
 
@@ -153,7 +153,7 @@ Sauce Demo kiểm thử được ở mức trung bình: dữ liệu sản phẩm
 | Controllability – điều khiển trạng thái | Trung bình     | Không có API reset giỏ hàng; giỏ lưu theo cookie                                                  | Mỗi scenario chạy trong browser context mới (cookie sạch) qua hook `before_scenario`                                        |
 | Observability – quan sát kết quả        | Tốt            | Giá, tên SP, "My Cart (n)", nhãn Sold Out đều hiển thị dạng text                                  | Assert trên text hiển thị; chụp ảnh khi fail trong `after_step`                                                             |
 | Locator                                 | Trung bình–yếu | Theme cũ, không có `data-testid`; có thể có class/name chuẩn của Shopify (ví dụ form `/cart/add`) | Ưu tiên locator theo text/name chuẩn của Shopify (`By.LINK_TEXT`, `By.NAME`), sau đó attribute ổn định; gom vào Page Object |
-| Test data                               | Tốt            | 7 sản phẩm, giá cố định, 2 SP Sold Out                                                            | Giữ trong `shared/products.json`, không hard-code trong step                                                             |
+| Test data                               | Tốt            | 7 sản phẩm, giá cố định, 2 SP Sold Out                                                            | Giữ trong `dataset/products.json`, không hard-code trong step                                                             |
 | Định danh URL                           | Có bẫy         | Handle Black heels là `flower-print-jeans`                                                        | Map tên → handle trong test data, không suy URL từ tên                                                                      |
 | Môi trường                              | Yếu            | Chỉ có production demo, dùng chung với người khác, không có staging                               | Không chạy tải; giới hạn song song; tag `@data-creating` cho case tạo tài khoản                                             |
 | Phụ thuộc bên ngoài                     | Yếu            | Checkout và thanh toán do Shopify host; widget Sauce, mạng xã hội                                 | Dừng ở trang checkout; không automate widget; chặn request bên thứ ba để dành cho Playwright ở Unit 2 (Day 6–7)             |
@@ -239,7 +239,7 @@ Tám requirement dưới đây phủ toàn bộ rủi ro Critical, High và Medi
 | REQ-07 | Là khách mới, tôi muốn tạo tài khoản                 | AC1 thiếu trường bắt buộc → báo lỗi; AC2 thông tin hợp lệ → tạo được tài khoản                       | R06  |
 | REQ-08 | Là khách hàng, tôi muốn tìm sản phẩm theo từ khóa    | AC1 "jacket" → có Grey jacket và Noir jacket; AC2 từ khóa không tồn tại → thông báo không có kết quả | R07  |
 
-#### 6.1 Feature mẫu – Giỏ hàng (`features/cart.feature`)
+#### 6.1 Feature mẫu – Giỏ hàng (`tests/features/cart.feature`)
 
 ```gherkin
 @cart @R01
@@ -281,7 +281,7 @@ Feature: Shopping cart
     Then the cart should be empty
 ```
 
-#### 6.2 Feature mẫu – Sản phẩm và catalog (`features/product.feature`)
+#### 6.2 Feature mẫu – Sản phẩm và catalog (`tests/features/product.feature`)
 
 ```gherkin
 @product
@@ -318,7 +318,7 @@ Feature: Product information
     Then the customer should not be able to add it to the cart
 ```
 
-#### 6.3 Feature mẫu – Đăng nhập (`features/login.feature`)
+#### 6.3 Feature mẫu – Đăng nhập (`tests/features/login.feature`)
 
 ```gherkin
 @login @R04
@@ -347,7 +347,7 @@ Feature: Customer login
     Then the password reset form should be shown
 ```
 
-#### 6.4 Feature mẫu – Tìm kiếm (`features/search.feature`)
+#### 6.4 Feature mẫu – Tìm kiếm (`tests/features/search.feature`)
 
 ```gherkin
 @search @R07 @medium
@@ -395,12 +395,12 @@ Truy vết được tự động hóa bằng tag: mỗi scenario mang `@REQ-xx` 
 
 ```text
 sauce-demo-unit1-bdd/
-├── features/
-│   ├── cart.feature, product.feature, login.feature, search.feature, ...
+├── pages/                # Page Object: home, catalog, product, cart, login, search
+├── tests/
+│   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # step definitions dùng lại được
 │   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
-├── pages/                # Page Object: home, catalog, product, cart, login, search
-├── shared/products.json      # dữ liệu test (repo Unit 2 có cùng file)
+├── dataset/products.json # dữ liệu test (Unit 2 có bản sao trong shared/)
 ├── reports/              # HTML/JSON/Allure + ảnh chụp lỗi
 ├── behave.ini
 └── requirements.txt      # behave, selenium, behave-html-formatter, allure-behave
@@ -462,12 +462,12 @@ Khi theme đổi giao diện, chỉ lớp Page Object phải sửa; feature và 
 
 | Lớp                | File trong repo            | Trách nhiệm                                                | Không được chứa         |
 |--------------------|-----------------------------------------|------------------------------------------------------------|-------------------------|
-| Feature            | `features/*.feature`                    | Hành vi bằng ngôn ngữ nghiệp vụ, tag                       | Locator, URL, wait      |
-| Step definitions   | `features/steps/*.py`                   | Khớp câu Gherkin, lấy tham số, gọi Page Object, assert     | Locator, `find_element` |
+| Feature            | `tests/features/*.feature`                    | Hành vi bằng ngôn ngữ nghiệp vụ, tag                       | Locator, URL, wait      |
+| Step definitions   | `tests/steps/*.py`                   | Khớp câu Gherkin, lấy tham số, gọi Page Object, assert     | Locator, `find_element` |
 | Page Object        | `pages/*.py`                            | Locator và thao tác trên từng trang, explicit wait         | Assert nghiệp vụ        |
 | Driver             | Selenium WebDriver                      | Điều khiển Chrome/Firefox                                  | –                       |
-| Hooks              | `features/environment.py`               | Mở/đóng trình duyệt, bỏ qua tag, chụp ảnh khi fail         | Logic nghiệp vụ         |
-| Cấu hình / dữ liệu | `behave.ini`, `shared/products.json` | Tag mặc định, base_url, browser; tên, handle, giá sản phẩm | –                       |
+| Hooks              | `tests/environment.py`               | Mở/đóng trình duyệt, bỏ qua tag, chụp ảnh khi fail         | Logic nghiệp vụ         |
+| Cấu hình / dữ liệu | `behave.ini`, `dataset/products.json` | Tag mặc định, base_url, browser; tên, handle, giá sản phẩm | –                       |
 
 Cấu trúc thư mục:
 
@@ -475,21 +475,22 @@ Cấu trúc thư mục:
 sauce-demo-unit1-bdd/
 ├── behave.ini                 # cấu hình: tag mặc định, userdata, formatter
 ├── requirements.txt           # behave, selenium, behave-html-formatter, allure-behave
-├── features/
-│   ├── cart.feature           # REQ-01, REQ-02
-│   ├── login.feature          # REQ-05
-│   ├── environment.py         # hooks
-│   └── steps/
-│       ├── common_steps.py    # điều hướng dùng chung
-│       ├── cart_steps.py
-│       └── account_steps.py
 ├── pages/                     # BasePage, ProductPage, CartPage, CatalogPage, LoginPage
-├── support/helpers.py         # page(), product(): hàm dùng chung cho steps
-├── shared/products.json      # dữ liệu test (repo Unit 2 có cùng file)
+├── tests/                     # behave.ini: paths = tests
+│   ├── features/
+│   │   ├── cart.feature       # REQ-01, REQ-02
+│   │   └── login.feature      # REQ-05
+│   ├── steps/
+│   │   ├── common_steps.py    # điều hướng dùng chung
+│   │   ├── cart_steps.py
+│   │   └── account_steps.py
+│   └── environment.py         # hooks
+├── helper_utility/helpers.py  # page(), product(): hàm dùng chung cho steps
+├── dataset/products.json      # dữ liệu test (Unit 2 có bản sao trong shared/)
 └── reports/
 ```
 
-Vì sao `support/helpers.py` nằm ngoài `features/steps/`: behave tự nạp mọi file trong `steps/`; nếu một file step import file step khác, các decorator `@given/@when/@then` chạy hai lần và behave báo `AmbiguousStep`.
+Vì sao `helper_utility/helpers.py` nằm ngoài `tests/steps/`: behave tự nạp mọi file trong `steps/`; nếu một file step import file step khác, các decorator `@given/@when/@then` chạy hai lần và behave báo `AmbiguousStep`.
 
 ### 2. Thiết kế feature file
 
@@ -503,7 +504,7 @@ Mỗi feature file ứng với một khả năng nghiệp vụ; tag ở cấp Fe
 | `Scenario Outline` + `Examples`           | Cùng hành vi, nhiều bộ dữ liệu             | 2 × Noir jacket, 3 × Striped top          |
 | `@tag`                                    | Phân loại để lọc và truy vết               | `@REQ-01 @critical @smoke`                |
 
-`features/cart.feature`:
+`tests/features/cart.feature`:
 
 ```gherkin
 @cart @R01
@@ -545,7 +546,7 @@ Feature: Shopping cart
     Then the cart should be empty
 ```
 
-`features/login.feature` (minh họa `Background` và case âm):
+`tests/features/login.feature` (minh họa `Background` và case âm):
 
 ```gherkin
 @login @R04
@@ -589,14 +590,14 @@ Mỗi câu Gherkin khớp với đúng một hàm Python qua decorator `@given /
 | `"{expected}"`       | `"£55.00"`      | chuỗi, chuyển sang số bằng `money_to_float()` |
 | Matcher `re` (Day 4) | `items?`        | regex khi cần biến thể số ít/số nhiều         |
 
-#### 3.2 Code `features/steps/cart_steps.py`
+#### 3.2 Code `tests/steps/cart_steps.py`
 
 ```python
 """Cart steps (REQ-01, REQ-02)."""
 from behave import given, then, when
 
 from pages import CartPage, ProductPage, money_to_float
-from support.helpers import page, product
+from helper_utility.helpers import page, product
 
 
 @given('the customer has {quantity:d} of "{name}" in the cart')
@@ -637,7 +638,7 @@ def step_cart_total(context, expected):
     assert actual == money_to_float(expected), f"Expected total {expected}, found £{actual:.2f}"
 ```
 
-#### 3.3 Hàm dùng chung `support/helpers.py`
+#### 3.3 Hàm dùng chung `helper_utility/helpers.py`
 
 ```python
 def product(context, name):
@@ -645,7 +646,7 @@ def product(context, name):
     try:
         return context.products[name]
     except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to shared/products.json")
+        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
 
 
 def page(context, cls):
@@ -689,7 +690,7 @@ Quy tắc viết step:
 
 - Step không chứa locator; mọi locator nằm trong `pages/`.
 
-- Dữ liệu (handle, giá) lấy từ `shared/products.json`, không gõ cứng.
+- Dữ liệu (handle, giá) lấy từ `dataset/products.json`, không gõ cứng.
 
 - Assert có thông điệp nói rõ mong đợi và thực tế để báo cáo đọc được.
 
@@ -699,7 +700,7 @@ Quy tắc viết step:
 
 ### 4. Hooks
 
-Hooks nằm trong `features/environment.py` và lo mọi việc setup/teardown, nhờ đó feature và step chỉ còn nói về nghiệp vụ. Framework Day 2 dùng 4 hook.
+Hooks nằm trong `tests/environment.py` và lo mọi việc setup/teardown, nhờ đó feature và step chỉ còn nói về nghiệp vụ. Framework Day 2 dùng 4 hook.
 
 Thứ tự behave gọi hook trong một lần chạy:
 
@@ -722,7 +723,7 @@ Thứ tự behave gọi hook trong một lần chạy:
 | `after_step`      | Step fail → chụp ảnh vào `reports/screenshots/`, đính kèm Allure                                           | Bằng chứng để phân loại lỗi sản phẩm hay lỗi script   |
 | `after_scenario`  | Đóng trình duyệt                                                                                           | Không rò tài nguyên, không dùng chung trạng thái      |
 
-Code `features/environment.py`:
+Code `tests/environment.py`:
 
 ```python
 import json
@@ -734,7 +735,7 @@ from pathlib import Path
 from selenium import webdriver
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))  # makes pages/ and support/ importable from steps
+sys.path.insert(0, str(ROOT))  # makes pages/ and helper_utility/ importable from steps
 SCREENSHOTS = ROOT / "reports" / "screenshots"
 
 
@@ -757,7 +758,7 @@ def before_all(context):
     context.browser_name = os.getenv("BROWSER", userdata.get("browser", "chrome"))
     context.headless = os.getenv("HEADLESS", userdata.get("headless", "true")).lower() == "true"
     context.timeout = int(userdata.get("timeout", "10"))
-    with open(ROOT / "shared" / "products.json", encoding="utf-8") as fh:
+    with open(ROOT / "dataset" / "products.json", encoding="utf-8") as fh:
         context.products = json.load(fh)["products"]
     SCREENSHOTS.mkdir(parents=True, exist_ok=True)
 
@@ -818,7 +819,7 @@ behave --tags="@data-creating or not @data-creating"  # chạy tất cả, ghi �
 
 ```ini
 [behave]
-paths = features
+paths = tests
 # Default filter: never run manual, work-in-progress or data-creating scenarios.
 tags = not @manual and not @wip and not @data-creating
 show_skipped = false
@@ -872,7 +873,7 @@ cd sauce-demo-unit1-bdd
 pip install -r requirements.txt
 behave --dry-run                 # 1. mọi step đã có code? (không mở trình duyệt)
 behave --tags=@smoke             # 2. smoke: 1 scenario
-behave features/cart.feature features/login.feature   # 3. phần Day 2: 8 scenario
+behave tests/features/cart.feature tests/features/login.feature   # 3. phần Day 2: 8 scenario
 behave -D headless=false         # xem trình duyệt chạy
 ```
 
@@ -916,14 +917,14 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 
 | Thêm | File | Mục đích |
 | --- | --- | --- |
-| Đặc tả checkout | `features/checkout.feature` | REQ-03, R02 Critical, dừng ở trang checkout |
-| Đặc tả sản phẩm, catalog | `features/product.feature` | REQ-04, REQ-06: bảng Examples 7 dòng, case hết hàng |
-| Đặc tả đăng ký | `features/register.feature` | REQ-07: case âm + case dương tag `@data-creating` |
-| Đặc tả tìm kiếm | `features/search.feature` | REQ-08: có / không có kết quả |
-| Step mới | `features/steps/product_steps.py`, `search_steps.py` | Catalog, trang chi tiết, tìm kiếm |
+| Đặc tả checkout | `tests/features/checkout.feature` | REQ-03, R02 Critical, dừng ở trang checkout |
+| Đặc tả sản phẩm, catalog | `tests/features/product.feature` | REQ-04, REQ-06: bảng Examples 7 dòng, case hết hàng |
+| Đặc tả đăng ký | `tests/features/register.feature` | REQ-07: case âm + case dương tag `@data-creating` |
+| Đặc tả tìm kiếm | `tests/features/search.feature` | REQ-08: có / không có kết quả |
+| Step mới | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, trang chi tiết, tìm kiếm |
 | Chạy một lệnh | `run.py` | Test + mọi báo cáo + truy vết |
 | Truy vết | `scripts/traceability.py` | REQ → Risk → feature → scenario → kết quả, từ tag `@REQ-xx` / `@Rxx` |
-| Dữ liệu dùng chung | `shared/products.json`, `shared/requirements.json` | Cùng dữ liệu và danh sách requirement cho Unit 1 và Unit 2 |
+| Dữ liệu dùng chung | `dataset/products.json`, `dataset/requirements.json` | Cùng dữ liệu và danh sách requirement cho Unit 1 và Unit 2 |
 
 ### 2. Đặc tả chạy được
 
@@ -936,7 +937,7 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 | `register.feature` | Từ chối khi thiếu email; Đăng ký thành công | REQ-07 | R06 Medium | `@negative`; `@data-creating` (mặc định không chạy) |
 | `search.feature` | Có kết quả; Không có kết quả | REQ-08 | R07 Medium | `@regression`, `@negative` |
 
-Ví dụ đặc tả data-driven (`features/product.feature`):
+Ví dụ đặc tả data-driven (`tests/features/product.feature`):
 
 ```gherkin
 @REQ-06 @R05 @high @regression
@@ -952,7 +953,7 @@ Scenario Outline: Catalog shows correct price and stock status
     | White sandals  | sold out  |
 ```
 
-Giá không lặp lại trong feature: step đọc giá từ `shared/products.json`, nên đổi giá chỉ sửa một chỗ.
+Giá không lặp lại trong feature: step đọc giá từ `dataset/products.json`, nên đổi giá chỉ sửa một chỗ.
 
 ### 3. Step dùng lại
 
@@ -1006,7 +1007,7 @@ python run.py --allure                # thêm reports/allure-results
 
 1. Thêm scenario cho REQ-02: đổi số lượng về 0 thì dòng bị xóa. Dùng lại được những step nào?
 2. Thêm scenario `@REQ-08` tìm "JACKET" (chữ hoa). Ma trận truy vết có tự nhận mà không sửa code không?
-3. Sửa sai một giá trong `shared/products.json`, chạy `python run.py`, tìm ảnh chụp step fail.
+3. Sửa sai một giá trong `dataset/products.json`, chạy `python run.py`, tìm ảnh chụp step fail.
 
 ---
 
@@ -1021,7 +1022,7 @@ Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi re
 ```bash
 cd sauce-demo-unit1-bdd
 python scripts/bdd_review.py .     # kiểm tra rubric tự động, trả mã 1 khi có phát hiện
-python scripts/risk_score.py       # đối chiếu phạm vi với risk register (shared/risk_register.csv)
+python scripts/risk_score.py       # đối chiếu phạm vi với risk register (dataset/risk_register.csv)
 python run.py                      # kết quả + ma trận truy vết
 ```
 
@@ -1044,8 +1045,8 @@ python run.py                      # kết quả + ma trận truy vết
 | Gherkin declarative | 0 step imperative | 2 |
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
 | Tái sử dụng step | 0 thừa, 0 mơ hồ, 0 gần trùng sau F1 | 2 |
-| Truy vết | 8/8 requirement, mọi scenario có tag; một danh sách requirement (`shared/requirements.json`) sau F5 | 2 |
-| Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `shared/products.json` / Examples | 2 |
+| Truy vết | 8/8 requirement, mọi scenario có tag; một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
+| Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `dataset/products.json` / Examples | 2 |
 | Báo cáo | HTML, JSON, JUnit, Allure, ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
 | **Tổng** | | **15 / 16** |
@@ -1054,11 +1055,11 @@ python run.py                      # kết quả + ma trận truy vết
 
 | ID | Phát hiện | Hành động | Trạng thái |
 | --- | --- | --- | --- |
-| F1 | `the cart should contain {count:d} item` và `... items` là hai định nghĩa | Gộp thành một step regex `items?` trong `features/steps/cart_steps.py` | Đã sửa |
+| F1 | `the cart should contain {count:d} item` và `... items` là hai định nghĩa | Gộp thành một step regex `items?` trong `tests/steps/cart_steps.py` | Đã sửa |
 | F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Chạy trên site thật; nếu lệch chỉ sửa `pages/` | Mở |
 | F3 | Chưa đo độ ổn định trên site thật | Chạy `python run.py` 3 lần; Unit 2 tự động hóa (`run.py stability`) | Mở → Unit 2 Day 8 |
 | F4 | Case đăng ký `@data-creating` mặc định không chạy | Xin trainer cho phép hoặc store riêng | Mở (trainer) |
-| F5 | Danh sách requirement lặp ở `traceability.py` và tài liệu Day 1 | Chuyển sang `shared/requirements.json`, Unit 1 và Unit 2 cùng đọc | Đã sửa |
+| F5 | Danh sách requirement lặp ở `traceability.py` và tài liệu Day 1 | Chuyển sang `dataset/requirements.json`, Unit 1 và Unit 2 cùng đọc | Đã sửa |
 | F6 | Checkout dừng ở trang checkout | Thanh toán kiểm thủ công; Unit 2 thêm kiểm tra mức network | Chấp nhận |
 | F7 | Với theme không có ô số lượng, thêm N sản phẩm có thể làm hủy request POST trước đó (phát hiện khi kiểm tra lại cùng Unit 2) | `ProductPage._submit()` chờ chuyển sang `/cart` sau mỗi lần bấm | Đã sửa |
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
@@ -1090,7 +1091,7 @@ use_step_matcher("parse")
 | Kết quả Unit 1 | Unit 2 dùng thế nào |
 | --- | --- |
 | Feature file | Chạy nguyên vẹn trên Playwright qua pytest-bdd |
-| Dữ liệu và requirement trong `shared/` | Chép sang repo Unit 2, thêm REQ-09 và REQ-10 |
+| Dữ liệu và requirement trong `dataset/` | Chép sang repo Unit 2, thêm REQ-09 và REQ-10 |
 | Mẫu Page Object | Cùng tên class, locator Playwright |
 | Script review | `run.py review` trong repo Unit 2 chạy lại rồi thêm kiểm tra ổn định của Playwright |
 | F3 còn mở (ổn định) | Phát hiện flaky tự động ở Day 8 |

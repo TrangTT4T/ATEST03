@@ -3,7 +3,7 @@ from behave import then, when
 from selenium.webdriver.common.by import By
 
 from pages import BasePage
-from support.helpers import page
+from helper_utility.helpers import page
 
 
 @when('the customer searches for "{keyword}"')

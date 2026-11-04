@@ -2,12 +2,12 @@
 
 behave (Cucumber for Python) + Selenium WebDriver · Application under test: https://sauce-demo.myshopify.com
 
-Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (Playwright) lives in a separate repository, `sauce-demo-unit2-playwright`, which reuses this repo's feature files and `shared/` data.
+Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (Playwright) lives in `../unit2-playwright/`; it reuses these feature files and keeps a copy of `dataset/` in its own `shared/` folder.
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
-| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `scripts/risk_score.py`, `shared/risk_register.csv`, `features/` |
-| 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `features/cart.feature`, `login.feature`, `features/environment.py`, `behave.ini`, `features/steps/`, `pages/` |
+| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `scripts/risk_score.py`, `dataset/risk_register.csv`, `tests/features/` |
+| 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `tests/features/cart.feature`, `login.feature`, `tests/environment.py`, `behave.ini`, `tests/steps/`, `pages/` |
 | 3 | Lab: executable specs, reusable steps, traceable reports | Day 3 section | all features, `run.py`, `scripts/traceability.py` |
 | 4 | Framework review | Day 4 section | `scripts/bdd_review.py` |
 
@@ -16,17 +16,18 @@ sauce-demo-unit1-bdd/
 ├── behave.ini                  # default tags, userdata (base_url, browser), formatters
 ├── requirements.txt
 ├── run.py                      # tests + reports + traceability in one command
-├── shared/                     # test data (the Unit 2 repo has the same files)
+├── pages/                      # Selenium Page Objects (only place with locators)
+├── tests/                      # everything behave runs (behave.ini: paths = tests)
+│   ├── features/               # Gherkin specs (also copied into Unit 2)
+│   │   ├── cart.feature  checkout.feature  product.feature
+│   │   └── login.feature register.feature  search.feature
+│   ├── steps/                  # common, cart, product, account, search
+│   └── environment.py          # hooks
+├── dataset/                    # test data (Unit 2 keeps a copy in its shared/)
 │   ├── products.json
 │   ├── requirements.json
 │   └── risk_register.csv
-├── features/                   # Gherkin specs (also copied into the Unit 2 repo)
-│   ├── cart.feature  checkout.feature  product.feature
-│   ├── login.feature register.feature  search.feature
-│   ├── environment.py          # hooks
-│   └── steps/                  # common, cart, product, account, search
-├── pages/                      # Selenium Page Objects (only place with locators)
-├── support/helpers.py
+├── helper_utility/helpers.py   # page(), product(): helpers shared by steps
 ├── scripts/
 │   ├── risk_score.py           # Day 1
 │   ├── traceability.py         # Day 3

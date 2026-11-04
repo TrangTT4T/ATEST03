@@ -1,4 +1,4 @@
-"""Helpers shared by step modules (kept outside features/steps so behave never loads them twice)."""
+"""Helpers shared by step modules (kept outside tests/steps so behave never loads them twice)."""
 
 
 def product(context, name):
@@ -6,7 +6,7 @@ def product(context, name):
     try:
         return context.products[name]
     except KeyError:
-        raise AssertionError(f"Unknown product {name!r}: add it to shared/products.json")
+        raise AssertionError(f"Unknown product {name!r}: add it to dataset/products.json")
 
 
 def page(context, cls):
