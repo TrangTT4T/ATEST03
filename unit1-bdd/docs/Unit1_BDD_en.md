@@ -400,7 +400,7 @@ sauce-demo-unit1-bdd/
 │   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # reusable step definitions
 │   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
-├── dataset/products.json # test data (Unit 2 keeps a copy in shared/)
+├── dataset/products.json # test data (Unit 2 keeps a copy in its dataset/)
 ├── reports/              # HTML/JSON/Allure + failure screenshots
 ├── behave.ini
 └── requirements.txt      # behave, selenium, behave-html-formatter, allure-behave
@@ -480,7 +480,7 @@ sauce-demo-unit1-bdd/
 │   │   └── account_steps.py
 │   └── environment.py         # hooks
 ├── helper_utility/helpers.py  # page(), product(): helpers shared by steps
-├── dataset/products.json      # test data (Unit 2 keeps a copy in shared/)
+├── dataset/products.json      # test data (Unit 2 keeps a copy in its dataset/)
 └── reports/
 ```
 

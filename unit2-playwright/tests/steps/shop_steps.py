@@ -1,6 +1,6 @@
 """Step definitions for the Unit 1 feature files, implemented on Playwright (pytest-bdd).
 
-Same sentences as the Unit 1 repo (features/steps/*.py); differences from Unit 1:
+Same sentences as Unit 1 (unit1-bdd/tests/steps/*.py); differences from Unit 1:
   - steps receive pytest fixtures (shop, products, page) instead of behave's `context`
   - assertions use Playwright's retrying expect() instead of explicit WebDriverWait
   - the "item"/"items" pair is one regex step from the start (Day 4 finding F1)

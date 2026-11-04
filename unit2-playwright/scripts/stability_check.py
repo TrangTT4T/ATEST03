@@ -1,6 +1,6 @@
 """Day 8 – static stability and maintainability check for the Playwright suite.
 
-Extends the Unit 1 review (scripts/bdd_review.py checks the shared feature files and steps) with
+Extends the Unit 1 review (scripts/bdd_review.py checks the feature files and step definitions) with
 Playwright-specific rules:
   1. no fixed waits: page.wait_for_timeout(), time.sleep()
   2. no force=True clicks (they hide real actionability problems)

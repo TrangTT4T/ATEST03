@@ -26,11 +26,11 @@ Unit 2 giữ nguyên mọi thứ Unit 1 đã xây và chỉ đổi "động cơ"
 
 | Unit 1 (behave + Selenium) | Unit 2 (pytest + Playwright) | Trạng thái |
 | --- | --- | --- |
-| `features/*.feature` của Unit 1 | Chép nguyên vẹn vào `features/`, chạy qua `tests/test_bdd_features.py` (pytest-bdd) | Kế thừa nguyên vẹn |
-| `shared/products.json`, `requirements.json`, `risk_register.csv` | Cùng file | Kế thừa, thêm REQ-09/REQ-10 |
+| `tests/features/*.feature` của Unit 1 | Chép nguyên vẹn vào `tests/features/`, chạy qua `tests/test_bdd_features.py` (pytest-bdd) | Kế thừa nguyên vẹn |
+| `dataset/products.json`, `requirements.json`, `risk_register.csv` | Cùng file | Kế thừa, thêm REQ-09/REQ-10 |
 | Tag `@REQ-xx`, `@Rxx`, `@critical`, `@smoke` | Thành marker pytest: `pytest -m smoke`, `-m R01` | Kế thừa |
 | Page Object (`pages/`) | Cùng tên class, dùng `Locator` của Playwright thay `WebElement` | Chuyển đổi |
-| Step definitions (`features/steps/`) | `tests/step_defs/shop_steps.py`, cùng câu chữ | Chuyển đổi |
+| Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, cùng câu chữ | Chuyển đổi |
 | Hook trong `environment.py` | Fixture trong `tests/conftest.py` | Thay thế |
 | Explicit wait `WebDriverWait` | Action tự chờ + `expect()` tự thử lại | Thay thế |
 | Trình duyệt mới mỗi scenario | **Browser context** mới mỗi test (rẻ hơn nhiều) | Cải tiến |
@@ -69,7 +69,7 @@ Thứ tự ưu tiên trong `pages/`:
 | --- | --- | --- | --- |
 | `browser`, `context`, `page` | session / test / test | `before_scenario` + `after_scenario` | pytest-playwright cung cấp |
 | `browser_context_args` | session | option trong `_make_driver()` | Viewport 1366×900, locale en-GB |
-| `products` | session | `before_all` đọc JSON | Đọc `shared/products.json` |
+| `products` | session | `before_all` đọc JSON | Đọc `dataset/products.json` |
 | `shop` | test | `support/helpers.page()` | Mọi Page Object gắn với page của test |
 | `cart_with` | test | code của step Given | Factory: `cart_with("Noir jacket", 2)` |
 | `block_third_party` | test, autouse | — | Kiểm soát network (Day 6) |
@@ -298,8 +298,8 @@ R09 ở Unit 1 kiểm thủ công vì widget hay flaky; chặn chúng ở tầng
 
 | File | Vai trò |
 | --- | --- |
-| `tests/test_bdd_features.py` | `scenarios(".")` chạy mọi file trong `features/` (Unit 1 feature files) |
-| `tests/step_defs/shop_steps.py` | Cài đặt bằng Playwright cho mọi step của Unit 1 |
+| `tests/test_bdd_features.py` | `scenarios(".")` chạy mọi file trong `tests/features/` (Unit 1 feature files) |
+| `tests/steps/shop_steps.py` | Cài đặt bằng Playwright cho mọi step của Unit 1 |
 | `tests/conftest.py` | Fixture, kiểm soát network, trạng thái đăng nhập, hook truy vết |
 | `tests/test_network.py` | Chặn request, kiểm tra request, giả lập lỗi, mạng chậm |
 | `tests/test_auth_state.py` | Phiên đăng nhập đã lưu (REQ-10) và kiểm tra cô lập |
@@ -337,7 +337,7 @@ pytest -m "critical and not negative"
 
 1. Thêm test giả lập lỗi: trang giỏ hàng trả 503. Khách hàng phải thấy gì? Viết assertion.
 2. Làm `test_catalog_loads_on_a_slow_network` fail bằng cách giảm timeout xuống 1 giây, mở trace và tìm request chậm.
-3. Thêm một scenario vào `features/search.feature`. Chạy ở repo này và repo Unit 1: phải sửa code nào? (Đáp án: không phải sửa, trừ khi câu step là câu mới.)
+3. Thêm một scenario vào `tests/features/search.feature`. Chạy ở repo này và repo Unit 1: phải sửa code nào? (Đáp án: không phải sửa, trừ khi câu step là câu mới.)
 4. Chạy `python run.py parallel` ba lần, so thời gian với chạy tuần tự.
 
 ---
@@ -383,7 +383,7 @@ test fail
  │     └─ tab Network: mã trạng thái, request chậm hoặc lỗi
  ├─ 3. phân loại
  │     ├─ lỗi sản phẩm   → sai giá, sai tổng, trang lỗi → báo bug kèm trace
- │     ├─ lỗi test       → locator đổi, giả định sai → sửa trong pages/ hoặc step_defs/
+ │     ├─ lỗi test       → locator đổi, giả định sai → sửa trong pages/ hoặc tests/steps/
  │     └─ môi trường     → store sập, captcha, mạng → chạy lại sau, gắn @manual nếu kéo dài
  └─ 4. chạy lại pass mà không sửa gì → flaky: xem B2
 ```
@@ -426,7 +426,7 @@ Nguyên nhân hay gặp và cách code này xử lý:
 #### B3. Kiểm tra tĩnh độ ổn định
 
 ```bash
-python run.py review     # 1. scripts/bdd_review.py (từ Unit 1) trên features/ và tests/step_defs/
+python run.py review     # 1. scripts/bdd_review.py (từ Unit 1) trên tests/features/ và tests/steps/
                          # 2. scripts/stability_check.py trên test và pages của Unit 2
 ```
 
@@ -442,7 +442,7 @@ python run.py review     # 1. scripts/bdd_review.py (từ Unit 1) trên features
 
 #### B4. Tiêu chí bảo trì (checklist)
 
-- [ ] Mọi requirement trong `shared/requirements.json` có ít nhất một test (`reports/traceability.md`)
+- [ ] Mọi requirement trong `dataset/requirements.json` có ít nhất một test (`reports/traceability.md`)
 - [ ] Gherkin vẫn declarative (`bdd_review.py` pass)
 - [ ] Không có locator ngoài `pages/`
 - [ ] Không chờ cố định, không `force=True` (`stability_check.py` pass)

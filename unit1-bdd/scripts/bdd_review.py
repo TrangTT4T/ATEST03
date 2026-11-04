@@ -35,7 +35,7 @@ class RegexMatcher:
 
 
 def features_dir(root: Path) -> Path:
-    """Unit 1 keeps feature files in tests/features; Unit 2 in features/."""
+    """Both units keep feature files in tests/features (older layout: features/)."""
     for candidate in (root / "tests" / "features", root / "features"):
         if candidate.is_dir():
             return candidate
@@ -47,7 +47,7 @@ def load_features(root: Path):
 
 
 def steps_dir(root: Path) -> Path:
-    """Unit 1 (behave) keeps steps in tests/steps; Unit 2 (pytest-bdd) in tests/step_defs."""
+    """Both units keep step definitions in tests/steps (older layouts: features/steps, tests/step_defs)."""
     for candidate in (root / "tests" / "steps", root / "features" / "steps", root / "tests" / "step_defs"):
         if candidate.is_dir():
             return candidate

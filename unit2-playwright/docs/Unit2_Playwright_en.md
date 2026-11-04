@@ -26,11 +26,11 @@ Unit 2 keeps everything Unit 1 built and changes only the engine: the same 6 fea
 
 | Unit 1 (behave + Selenium) | Unit 2 (pytest + Playwright) | Status |
 | --- | --- | --- |
-| Unit 1 `features/*.feature` | Copied unchanged into `features/`, run by `tests/test_bdd_features.py` (pytest-bdd) | Inherited unchanged |
-| `shared/products.json`, `requirements.json`, `risk_register.csv` | Same files | Inherited, REQ-09/REQ-10 added |
+| Unit 1 `tests/features/*.feature` | Copied unchanged into `tests/features/`, run by `tests/test_bdd_features.py` (pytest-bdd) | Inherited unchanged |
+| `dataset/products.json`, `requirements.json`, `risk_register.csv` | Same files | Inherited, REQ-09/REQ-10 added |
 | Tags `@REQ-xx`, `@Rxx`, `@critical`, `@smoke` | Become pytest markers: `pytest -m smoke`, `-m R01` | Inherited |
 | Page Objects (`pages/`) | Same class names, Playwright `Locator` instead of `WebElement` | Ported |
-| Step definitions (`features/steps/`) | `tests/step_defs/shop_steps.py`, same sentences | Ported |
+| Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, same sentences | Ported |
 | `environment.py` hooks | `tests/conftest.py` fixtures | Replaced |
 | `WebDriverWait` explicit waits | Auto-waiting actions + retrying `expect()` | Replaced |
 | Fresh browser per scenario | Fresh **browser context** per test (much cheaper) | Improved |
@@ -69,7 +69,7 @@ Locator order used in `pages/`:
 | --- | --- | --- | --- |
 | `browser`, `context`, `page` | session / test / test | `before_scenario` + `after_scenario` | Provided by pytest-playwright |
 | `browser_context_args` | session | `_make_driver()` options | Viewport 1366×900, locale en-GB |
-| `products` | session | `before_all` loading JSON | Reads `shared/products.json` |
+| `products` | session | `before_all` loading JSON | Reads `dataset/products.json` |
 | `shop` | test | `support/helpers.page()` | All Page Objects bound to this test's page |
 | `cart_with` | test | Given step code | Factory: `cart_with("Noir jacket", 2)` |
 | `block_third_party` | test, autouse | — | Network control (Day 6) |
@@ -298,8 +298,8 @@ R09 was manual in Unit 1 because the widgets are flaky; blocking them at the net
 
 | File | Role |
 | --- | --- |
-| `tests/test_bdd_features.py` | `scenarios(".")` runs every file in `features/` (Unit 1 feature files) |
-| `tests/step_defs/shop_steps.py` | Playwright implementation of every Unit 1 step |
+| `tests/test_bdd_features.py` | `scenarios(".")` runs every file in `tests/features/` (Unit 1 feature files) |
+| `tests/steps/shop_steps.py` | Playwright implementation of every Unit 1 step |
 | `tests/conftest.py` | Fixtures, network control, auth state, traceability hooks |
 | `tests/test_network.py` | Interception, request assertion, fault injection, throttling |
 | `tests/test_auth_state.py` | Saved login (REQ-10) and isolation check |
@@ -337,7 +337,7 @@ Verified against a local Shopify-structured mock store. Against the live store, 
 
 1. Add a fault-injection test: the cart page answers 503. What should the customer see? Write the assertion.
 2. Make `test_catalog_loads_on_a_slow_network` fail by lowering the timeout to 1 s, then open its trace and find the slow request.
-3. Add a scenario to `features/search.feature`. Run it here and in the Unit 1 repo: which code had to change? (Answer: none, unless the step sentence is new.)
+3. Add a scenario to `tests/features/search.feature`. Run it here and in the Unit 1 repo: which code had to change? (Answer: none, unless the step sentence is new.)
 4. Run `python run.py parallel` three times and compare durations with the serial run.
 
 ---
@@ -383,7 +383,7 @@ test fails
  │     └─ Network tab: status codes, slow or failed requests
  ├─ 3. classify
  │     ├─ product defect   → wrong price, wrong total, error page → raise a bug with the trace
- │     ├─ test defect      → locator changed, wrong assumption → fix in pages/ or step_defs/
+ │     ├─ test defect      → locator changed, wrong assumption → fix in pages/ or tests/steps/
  │     └─ environment      → store down, captcha, network → retry later, mark @manual if persistent
  └─ 4. if it passes on rerun without a change → flaky: see B2
 ```
@@ -426,7 +426,7 @@ Typical root causes and the fix used in this code:
 #### B3. Static stability check
 
 ```bash
-python run.py review     # 1. scripts/bdd_review.py (from Unit 1) on features/ and tests/step_defs/
+python run.py review     # 1. scripts/bdd_review.py (from Unit 1) on tests/features/ and tests/steps/
                          # 2. scripts/stability_check.py on Unit 2 tests and pages
 ```
 
@@ -442,7 +442,7 @@ python run.py review     # 1. scripts/bdd_review.py (from Unit 1) on features/ a
 
 #### B4. Maintainability criteria (checklist)
 
-- [ ] Every requirement in `shared/requirements.json` has at least one test (`reports/traceability.md`)
+- [ ] Every requirement in `dataset/requirements.json` has at least one test (`reports/traceability.md`)
 - [ ] Gherkin stays declarative (`bdd_review.py` passes)
 - [ ] No locator outside `pages/`
 - [ ] No fixed waits, no `force=True` (`stability_check.py` passes)

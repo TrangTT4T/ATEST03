@@ -2,7 +2,7 @@
 
 behave (Cucumber for Python) + Selenium WebDriver · Application under test: https://sauce-demo.myshopify.com
 
-Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (Playwright) lives in `../unit2-playwright/`; it reuses these feature files and keeps a copy of `dataset/` in its own `shared/` folder.
+Covers Day 1–4. The whole unit is documented in one file, with a section per day: `docs/Unit1_BDD_vi.md` (Tiếng Việt) and `docs/Unit1_BDD_en.md` (English). Unit 2 (Playwright) lives in `../unit2-playwright/`; it reuses these feature files and keeps its own copy of `dataset/`.
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
@@ -23,7 +23,7 @@ sauce-demo-unit1-bdd/
 │   │   └── login.feature register.feature  search.feature
 │   ├── steps/                  # common, cart, product, account, search
 │   └── environment.py          # hooks
-├── dataset/                    # test data (Unit 2 keeps a copy in its shared/)
+├── dataset/                    # test data (Unit 2 keeps its own copy)
 │   ├── products.json
 │   ├── requirements.json
 │   └── risk_register.csv

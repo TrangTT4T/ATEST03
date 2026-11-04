@@ -1,12 +1,12 @@
 """Shared fixtures and hooks for the Playwright suite (Unit 2).
 
-Inherited from Unit 1: feature files, shared/ test data, risk + requirement tags, Page Object pattern,
+Inherited from Unit 1: feature files, dataset/ test data, risk + requirement tags, Page Object pattern,
 one fresh browser state per scenario, screenshot on failure, traceability matrix.
 New in Unit 2: pytest fixtures instead of behave hooks, network control, tracing, auth state, xdist.
 
 Fixture map (Day 5-6):
   browser (session) -> context (one per test: isolation) -> page (one per test)
-  products           test data from test_data/products.json
+  products           test data from dataset/products.json
   block_third_party  autouse network control: only the store and Shopify hosts are reached
   shop               Page Objects bound to this test's page
   cart_with          factory fixture: put N of a product in the cart
@@ -25,10 +25,10 @@ from playwright.sync_api import Browser, BrowserContext, Page
 
 from pages import BasePage, CartPage, CatalogPage, LoginPage, ProductPage, RegisterPage, SearchPage
 
-pytest_plugins = ["step_defs.shop_steps"]  # Gherkin step definitions (pytest-bdd)
+pytest_plugins = ["steps.shop_steps"]  # Gherkin step definitions (pytest-bdd)
 
 ROOT = Path(__file__).resolve().parent.parent
-SHARED = ROOT / "shared"  # same files as the Unit 1 repo
+DATASET = ROOT / "dataset"  # same files as unit1-bdd/dataset
 AUTH_FILE = ROOT / ".auth" / "customer.json"
 SHOPIFY_SUFFIXES = (".shopify.com", ".myshopify.com", ".shopifycdn.com", ".shopifycloud.com", ".shopifysvc.com")
 
@@ -36,7 +36,7 @@ SHOPIFY_SUFFIXES = (".shopify.com", ".myshopify.com", ".shopifycdn.com", ".shopi
 # --- data ---------------------------------------------------------------------
 @pytest.fixture(scope="session")
 def products() -> dict:
-    with open(SHARED / "products.json", encoding="utf-8") as fh:
+    with open(DATASET / "products.json", encoding="utf-8") as fh:
         return json.load(fh)["products"]
 
 
@@ -146,11 +146,11 @@ def pytest_sessionfinish(session):
     for nodeid, entry in _TRACE.items():
         for req in entry["reqs"]:
             by_req[req].append((nodeid, ",".join(entry["risks"]), entry["outcome"]))
-    catalogue = json.loads((SHARED / "requirements.json").read_text(encoding="utf-8"))["requirements"]
+    catalogue = json.loads((DATASET / "requirements.json").read_text(encoding="utf-8"))["requirements"]
     lines = ["# Traceability matrix (Unit 2)", "", "| REQ | Requirement | Risk | Test | Result |",
              "| --- | --- | --- | --- | --- |"]
     for req in sorted(set(by_req) | set(catalogue)):
-        title = catalogue.get(req, {}).get("title", "(not in shared/requirements.json)")
+        title = catalogue.get(req, {}).get("title", "(not in dataset/requirements.json)")
         if req not in by_req:
             lines.append(f"| {req} | {title} | {catalogue[req]['risk']} | **no test ran in this session** | - |")
         for nodeid, risks, outcome in sorted(by_req.get(req, [])):

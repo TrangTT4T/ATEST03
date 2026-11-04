@@ -400,7 +400,7 @@ sauce-demo-unit1-bdd/
 │   ├── features/         # cart.feature, product.feature, login.feature, search.feature, ...
 │   ├── steps/            # step definitions dùng lại được
 │   └── environment.py    # hooks: before_all, before_scenario, after_step, after_scenario
-├── dataset/products.json # dữ liệu test (Unit 2 có bản sao trong shared/)
+├── dataset/products.json # dữ liệu test (Unit 2 có bản sao trong dataset/ của nó)
 ├── reports/              # HTML/JSON/Allure + ảnh chụp lỗi
 ├── behave.ini
 └── requirements.txt      # behave, selenium, behave-html-formatter, allure-behave
@@ -486,7 +486,7 @@ sauce-demo-unit1-bdd/
 │   │   └── account_steps.py
 │   └── environment.py         # hooks
 ├── helper_utility/helpers.py  # page(), product(): hàm dùng chung cho steps
-├── dataset/products.json      # dữ liệu test (Unit 2 có bản sao trong shared/)
+├── dataset/products.json      # dữ liệu test (Unit 2 có bản sao trong dataset/ của nó)
 └── reports/
 ```
 
