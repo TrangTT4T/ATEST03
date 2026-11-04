@@ -1,0 +1,15 @@
+{
+  "_comment": "Single requirement catalogue for both units. 'unit' = where the requirement is first automated.",
+  "requirements": {
+    "REQ-01": {"title": "Add products to the cart", "risk": "R01", "level": "Critical", "unit": 1},
+    "REQ-02": {"title": "Edit or remove products in the cart", "risk": "R01", "level": "Critical", "unit": 1},
+    "REQ-03": {"title": "Proceed to checkout", "risk": "R02", "level": "Critical", "unit": 1},
+    "REQ-04": {"title": "Correct product information", "risk": "R03", "level": "High", "unit": 1},
+    "REQ-05": {"title": "Secure login", "risk": "R04", "level": "High", "unit": 1},
+    "REQ-06": {"title": "Browse the product list", "risk": "R05", "level": "High", "unit": 1},
+    "REQ-07": {"title": "Create an account", "risk": "R06", "level": "Medium", "unit": 1},
+    "REQ-08": {"title": "Search products by keyword", "risk": "R07", "level": "Medium", "unit": 1},
+    "REQ-09": {"title": "Shopping keeps working when third-party services fail", "risk": "R09", "level": "Medium", "unit": 2},
+    "REQ-10": {"title": "A logged-in customer reaches the account without logging in again", "risk": "R04", "level": "High", "unit": 2}
+  }
+}

@@ -1,0 +1,6 @@
+.auth/
+test-results/
+**/reports/*
+!**/reports/.gitkeep
+__pycache__/
+.pytest_cache/
