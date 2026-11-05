@@ -1,4 +1,4 @@
-@register @R06 @medium
+@register @medium
 Feature: Customer registration
   As a new customer
   I want to create an account

@@ -1,6 +1,6 @@
 """Shared fixtures and hooks for the Playwright suite (Unit 2).
 
-Inherited from Unit 1: feature files, dataset/products.json, risk tags (@Rxx), Page Object pattern,
+Inherited from Unit 1: feature files, dataset/products.json, tags (@critical, @smoke ...), Page Object pattern,
 one fresh browser state per scenario, screenshot on failure.
 New in Unit 2: pytest fixtures instead of behave hooks, network control, tracing, auth state, xdist.
 
@@ -57,7 +57,7 @@ def _is_allowed(url: str, store_host: str) -> bool:
 def block_third_party(request, context: BrowserContext, base_url: str):
     """Abort requests to third-party hosts (social widgets, analytics, Sauce app).
 
-    Removes the main source of flakiness that the store does not own (risk R09).
+    Removes the main source of flakiness that the store does not own.
     Opt out with @pytest.mark.allow_third_party. Yields the list of blocked URLs.
     """
     blocked: list[str] = []

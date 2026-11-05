@@ -2,7 +2,7 @@
 
 pytest + pytest-bdd + Playwright · Website kiểm thử: https://sauce-demo.myshopify.com · Code: `unit2-playwright/`
 
-Unit 2 kế thừa Unit 1: cùng các feature Gherkin, dữ liệu test và tag rủi ro, chạy trên Playwright (Day 5); thêm tracing, kiểm soát network, lưu phiên đăng nhập, chạy song song (Day 6); áp dụng cho các luồng ưu tiên trong bài lab (Day 7); và làm cho ổn định bằng phân tích lỗi và kiểm soát flaky (Day 8). Mọi thứ chạy bằng lệnh `pytest`.
+Unit 2 kế thừa Unit 1: cùng các feature Gherkin, dữ liệu test và tag, chạy trên Playwright (Day 5); thêm tracing, kiểm soát network, lưu phiên đăng nhập, chạy song song (Day 6); áp dụng cho các luồng ưu tiên trong bài lab (Day 7); và làm cho ổn định bằng phân tích lỗi và kiểm soát flaky (Day 8). Mọi thứ chạy bằng lệnh `pytest`.
 
 | Day | Nội dung | LO | Hình thức | Phút | Format |
 | --- | --- | --- | --- | --- | --- |
@@ -35,7 +35,7 @@ unit2-playwright/
 
 Unit 2 · LO3 · Concept/Lecture · 120 phút · Virtual
 
-Unit 2 giữ những gì Unit 1 đã xây và đổi "động cơ": cùng 6 feature file và tag rủi ro, giờ chạy trên Playwright; fixture của pytest thay cho hook của behave.
+Unit 2 giữ những gì Unit 1 đã xây và đổi "động cơ": cùng 6 feature file và tag, giờ chạy trên Playwright; fixture của pytest thay cho hook của behave.
 
 ### 1. Kế thừa từ Unit 1 và phần mới
 
@@ -43,7 +43,7 @@ Unit 2 giữ những gì Unit 1 đã xây và đổi "động cơ": cùng 6 feat
 | --- | --- | --- |
 | `tests/features/*.feature` | Cùng file trong `tests/features/`, chạy qua `tests/test_bdd_features.py` (pytest-bdd) | Kế thừa nguyên vẹn |
 | `dataset/products.json` | Cùng file | Kế thừa |
-| Tag `@Rxx`, `@critical`, `@smoke`, `@negative` | Thành marker pytest: `pytest -m smoke`, `pytest -m R01` | Kế thừa |
+| Tag `@cart`, `@critical`, `@smoke`, `@negative` | Thành marker pytest: `pytest -m smoke`, `pytest -m cart` | Kế thừa |
 | Page Object (`pages/`) | Cùng tên class, dùng `Locator` của Playwright thay `WebElement` | Chuyển đổi |
 | Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, cùng câu chữ | Chuyển đổi |
 | Hook trong `tests/environment.py` | Fixture trong `tests/conftest.py` | Thay thế |
@@ -203,7 +203,7 @@ Cho phép: host của store và `*.shopify.com`, `*.myshopify.com`, `*.shopifycd
 | `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: giả lập lỗi server | R01 |
 | `test_catalog_loads_on_a_slow_network` | CDP của Chromium `Network.emulateNetworkConditions` (trễ 400 ms) | R05 |
 
-Test thường mang cùng marker rủi ro như tag Gherkin (`@pytest.mark.R01`), nên `pytest -m R01` chọn được cả hai loại.
+Test thường mang cùng marker mức rủi ro như tag Gherkin (`@pytest.mark.critical`), nên `pytest -m critical` chọn được cả hai loại.
 
 ```python
 page.route("**/cart/add*", lambda route: route.fulfill(status=500, body="Internal Server Error"))
@@ -260,7 +260,7 @@ An toàn vì mỗi test có context riêng (Day 5) và không test nào phụ th
 | JUnit XML | `--junitxml` | `reports/junit.xml` |
 | Trace, ảnh, video | pytest-playwright | `test-results/` |
 
-Lọc theo rủi ro thay cho một báo cáo truy vết riêng: `pytest -m R01 --collect-only -q` liệt kê mọi test của rủi ro R01, cả Gherkin lẫn test thường.
+Lọc theo marker thay cho một báo cáo truy vết riêng: `pytest -m critical --collect-only -q` liệt kê mọi test rủi ro Critical, cả Gherkin lẫn test thường; `pytest -m cart --collect-only -q` liệt kê một nhóm chức năng.
 
 ### 6. Câu hỏi ôn tập
 
@@ -312,7 +312,7 @@ pytest                              # bộ mặc định
 pytest -m smoke                     # @smoke: thêm vào giỏ + checkout
 pytest -n auto                      # chạy song song
 pytest -m auth                      # cần SAUCE_EMAIL / SAUCE_PASSWORD
-pytest -m R01                       # mọi test của rủi ro R01
+pytest -m critical                  # mọi test rủi ro Critical
 pytest -m "critical and not negative"
 ```
 
@@ -346,7 +346,7 @@ Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; ph�
 
 | Chủ đề | Unit 1 (Day 1–4) | Unit 2 (Day 5–7) |
 | --- | --- | --- |
-| Đặc tả | Feature Gherkin, tag rủi ro | Cùng file, chạy bằng pytest-bdd |
+| Đặc tả | Feature Gherkin, tag | Cùng file, chạy bằng pytest-bdd |
 | Động cơ | Selenium WebDriver | Playwright (tự chờ, context) |
 | Setup / teardown | Hook của behave | Fixture của pytest (`conftest.py`) |
 | Cô lập | Trình duyệt mới mỗi scenario | Context mới mỗi test |
@@ -355,7 +355,7 @@ Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; ph�
 | Network | Không kiểm soát | Chặn, kiểm tra, giả lập lỗi, giả lập chậm |
 | Đăng nhập | Đăng nhập qua UI mỗi lần | Dùng lại storage state đã lưu |
 | Tốc độ | Tuần tự | Song song `-n auto` |
-| Lọc theo rủi ro | `behave --tags=@R01` | `pytest -m R01` |
+| Lọc | `behave --tags=@cart` | `pytest -m cart` |
 
 Câu hỏi ôn tập:
 
@@ -433,11 +433,11 @@ Select-String -Path tests\*.py, tests\steps\*.py -Pattern ':nth-child|nth=|\.nth
 | Không `force=True` | Che đi phần tử mà người dùng không bấm được |
 | Không selector theo vị trí trong test | Hỏng khi bố cục thay đổi |
 | Không CSS/XPath thô trong test | Locator phải nằm trong `pages/` |
-| Test thường nào cũng có marker rủi ro (`@pytest.mark.R0x`) | Giữ `pytest -m R0x` đầy đủ |
+| Test thường nào cũng có marker mức rủi ro (`critical`, `high`, `medium`) | Giữ `pytest -m critical` đầy đủ |
 
 #### B4. Tiêu chí bảo trì (checklist)
 
-- [ ] Rủi ro nào được automate (R01–R07, R09) cũng có ít nhất một test: `pytest -m R0x --collect-only -q`
+- [ ] Nhóm chức năng và mức rủi ro nào cũng có ít nhất một test: `pytest -m cart --collect-only -q`, `pytest -m critical --collect-only -q`
 - [ ] Gherkin vẫn declarative (không URL, CSS, click, wait trong `tests/features/`)
 - [ ] Không có locator ngoài `pages/`
 - [ ] Không chờ cố định, không `force=True` (lệnh tìm ở B3 không ra kết quả)

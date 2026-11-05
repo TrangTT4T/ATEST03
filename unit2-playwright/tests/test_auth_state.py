@@ -1,4 +1,4 @@
-"""Authentication state reuse (Day 6) – risk R04 High.
+"""Authentication state reuse (Day 6) – login risk (High).
 
 Unit 1 logged in through the UI in every scenario that needed it. Here the session fixture
 `customer_state` logs in once, saves cookies + localStorage, and each test starts already logged in.
@@ -9,7 +9,7 @@ import re
 import pytest
 from playwright.sync_api import Browser, expect
 
-pytestmark = [pytest.mark.auth, pytest.mark.high, pytest.mark.R04]
+pytestmark = [pytest.mark.auth, pytest.mark.high]
 
 
 def test_saved_auth_state_opens_account_without_login(browser: Browser, base_url, customer_state):

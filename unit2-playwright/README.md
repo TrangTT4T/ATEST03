@@ -8,7 +8,7 @@ Unit 2 carries the BDD part of Unit 1 (the Gherkin feature files and `dataset/pr
 
 | From Unit 1 (copied unchanged) | Added in Unit 2 |
 | --- | --- |
-| `tests/features/*.feature`: 6 features, 14 scenarios, tags `@Rxx` `@critical` `@smoke` | Run on Playwright by `tests/test_bdd_features.py` (pytest-bdd); tags become pytest markers |
+| `tests/features/*.feature`: 6 features, 14 scenarios, tags `@cart` `@critical` `@smoke` | Run on Playwright by `tests/test_bdd_features.py` (pytest-bdd); tags become pytest markers |
 | `dataset/products.json` | Same file |
 | Page Object pattern | `pages/` with Playwright locators (role/text first), auto-waiting |
 | Step sentences | `tests/steps/shop_steps.py` on Playwright |
@@ -46,10 +46,10 @@ pip install -r requirements.txt
 playwright install chromium
 pytest                               # 25 tests: 21 Unit 1 scenarios + 4 network tests
 pytest -m smoke
-pytest -m R01                        # every test for one risk (Gherkin + plain tests)
+pytest -m critical                   # every Critical-risk test (Gherkin + plain tests)
 pytest -n auto                       # parallel
 pytest -m auth                       # needs SAUCE_EMAIL / SAUCE_PASSWORD
-pytest -m R01 --headed --slowmo 300
+pytest -m cart --headed --slowmo 300
 playwright show-trace test-results/<test>/trace.zip
 ```
 

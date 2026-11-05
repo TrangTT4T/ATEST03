@@ -2,7 +2,7 @@
 
 pytest + pytest-bdd + Playwright · Application under test: https://sauce-demo.myshopify.com · Code: `unit2-playwright/`
 
-Unit 2 builds on Unit 1: the same Gherkin feature files, test data and risk tags run on Playwright (Day 5), then gain tracing, network control, saved login and parallel runs (Day 6), are applied to the prioritised workflows in the lab (Day 7), and are made reliable with failure analysis and flaky-test control (Day 8). Everything runs with the `pytest` command.
+Unit 2 builds on Unit 1: the same Gherkin feature files, test data and tags run on Playwright (Day 5), then gain tracing, network control, saved login and parallel runs (Day 6), are applied to the prioritised workflows in the lab (Day 7), and are made reliable with failure analysis and flaky-test control (Day 8). Everything runs with the `pytest` command.
 
 | Day | Content | LO | Delivery | Minutes | Format |
 | --- | --- | --- | --- | --- | --- |
@@ -35,7 +35,7 @@ unit2-playwright/
 
 Unit 2 · LO3 · Concept/Lecture · 120 min · Virtual
 
-Unit 2 keeps what Unit 1 built and changes the engine: the same 6 feature files and risk tags now run on Playwright, and pytest fixtures replace behave hooks.
+Unit 2 keeps what Unit 1 built and changes the engine: the same 6 feature files and tags now run on Playwright, and pytest fixtures replace behave hooks.
 
 ### 1. What is inherited from Unit 1, what is new
 
@@ -43,7 +43,7 @@ Unit 2 keeps what Unit 1 built and changes the engine: the same 6 feature files 
 | --- | --- | --- |
 | `tests/features/*.feature` | Same files in `tests/features/`, run by `tests/test_bdd_features.py` (pytest-bdd) | Inherited unchanged |
 | `dataset/products.json` | Same file | Inherited |
-| Tags `@Rxx`, `@critical`, `@smoke`, `@negative` | Become pytest markers: `pytest -m smoke`, `pytest -m R01` | Inherited |
+| Tags `@cart`, `@critical`, `@smoke`, `@negative` | Become pytest markers: `pytest -m smoke`, `pytest -m cart` | Inherited |
 | Page Objects (`pages/`) | Same class names, Playwright `Locator` instead of `WebElement` | Ported |
 | Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, same sentences | Ported |
 | `tests/environment.py` hooks | `tests/conftest.py` fixtures | Replaced |
@@ -203,7 +203,7 @@ Allowed: the store host and `*.shopify.com`, `*.myshopify.com`, `*.shopifycdn.co
 | `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: fault injection | R01 |
 | `test_catalog_loads_on_a_slow_network` | Chromium CDP `Network.emulateNetworkConditions` (400 ms latency) | R05 |
 
-Plain tests carry the same risk markers as the Gherkin tags (`@pytest.mark.R01`), so `pytest -m R01` selects both.
+Plain tests carry the same risk-level markers as the Gherkin tags (`@pytest.mark.critical`), so `pytest -m critical` selects both.
 
 ```python
 page.route("**/cart/add*", lambda route: route.fulfill(status=500, body="Internal Server Error"))
@@ -260,7 +260,7 @@ Safe because every test has its own context (Day 5) and no test depends on anoth
 | JUnit XML | `--junitxml` | `reports/junit.xml` |
 | Trace, screenshot, video | pytest-playwright | `test-results/` |
 
-Selecting by risk replaces a separate traceability report: `pytest -m R01 --collect-only -q` lists every test behind risk R01, Gherkin or plain.
+Selecting by marker replaces a separate traceability report: `pytest -m critical --collect-only -q` lists every Critical-risk test, Gherkin or plain; `pytest -m cart --collect-only -q` lists one feature area.
 
 ### 6. Review questions
 
@@ -312,7 +312,7 @@ pytest                              # default suite
 pytest -m smoke                     # @smoke: add to cart + checkout
 pytest -n auto                      # parallel
 pytest -m auth                      # needs SAUCE_EMAIL / SAUCE_PASSWORD
-pytest -m R01                       # every test for risk R01
+pytest -m critical                  # every Critical-risk test
 pytest -m "critical and not negative"
 ```
 
@@ -346,7 +346,7 @@ Day 8 closes both units: part A revises Unit 2 against Unit 1, part B makes the 
 
 | Topic | Unit 1 (Day 1–4) | Unit 2 (Day 5–7) |
 | --- | --- | --- |
-| Specification | Gherkin features, risk tags | Same files, run by pytest-bdd |
+| Specification | Gherkin features, tags | Same files, run by pytest-bdd |
 | Engine | Selenium WebDriver | Playwright (auto-wait, contexts) |
 | Setup / teardown | behave hooks | pytest fixtures (`conftest.py`) |
 | Isolation | New browser per scenario | New context per test |
@@ -355,7 +355,7 @@ Day 8 closes both units: part A revises Unit 2 against Unit 1, part B makes the 
 | Network | Not controlled | Block, assert, fault-inject, throttle |
 | Login | UI login each time | Saved storage state |
 | Speed | Serial | `-n auto` parallel |
-| Selection by risk | `behave --tags=@R01` | `pytest -m R01` |
+| Selection | `behave --tags=@cart` | `pytest -m cart` |
 
 Revision questions:
 
@@ -433,11 +433,11 @@ Select-String -Path tests\*.py, tests\steps\*.py -Pattern ':nth-child|nth=|\.nth
 | No `force=True` | Hides elements that a user could not click |
 | No positional selectors in tests | Breaks when the layout changes |
 | No raw CSS/XPath in tests | Locators belong in `pages/` |
-| Every plain test has a risk marker (`@pytest.mark.R0x`) | Keeps `pytest -m R0x` complete |
+| Every plain test has a risk-level marker (`critical`, `high`, `medium`) | Keeps `pytest -m critical` complete |
 
 #### B4. Maintainability criteria (checklist)
 
-- [ ] Every automated risk (R01–R07, R09) has at least one test: `pytest -m R0x --collect-only -q`
+- [ ] Every feature area and risk level has at least one test: `pytest -m cart --collect-only -q`, `pytest -m critical --collect-only -q`
 - [ ] Gherkin stays declarative (no URL, CSS, click or wait in `tests/features/`)
 - [ ] No locator outside `pages/`
 - [ ] No fixed waits, no `force=True` (B3 searches return nothing)

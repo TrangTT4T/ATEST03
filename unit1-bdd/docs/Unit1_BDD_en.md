@@ -130,7 +130,7 @@ Sauce Demo is a Shopify store: the team has no source code or internal API, so t
 | `@smoke`                          | Minimum flow: home opens, add to cart, reach checkout | Every deploy, \< 5 min      |
 | `@regression`                     | All automated scenarios                               | Nightly                     |
 | `@critical` / `@high` / `@medium` | Risk level from section 2                             | Filter when time is limited |
-| `@R01` … `@R10`                   | Risk ID, for traceability                             | Coverage reporting          |
+| `@cart`, `@login`, `@checkout` …    | Feature area, for traceability                        | Run one area                |
 | `@negative`                       | Negative case                                         | –                           |
 | `@data-creating`                  | Creates real data on the store                        | Only when permitted         |
 | `@wip`, `@manual`                 | Work in progress / manual only                        | Excluded from the pipeline  |
@@ -197,7 +197,7 @@ Example Mapping for the Cart story:
 
 - Every scenario is independent of run order.
 
-- Tag risk and requirement IDs for traceability.
+- Tag the feature area and risk level for traceability and filtering.
 
 #### 5.3 Bad vs good example
 
@@ -215,7 +215,7 @@ Scenario: add to cart
 Good (declarative, business-focused):
 
 ```gherkin
-@R01 @critical @smoke
+@critical @smoke
 Scenario: Customer adds an in-stock product to the cart
   Given the customer is viewing the product "Grey jacket"
   When the customer adds the product to the cart
@@ -241,7 +241,7 @@ The eight requirements below cover every Critical, High and Medium risk chosen f
 #### 6.1 Sample feature – Cart (`tests/features/cart.feature`)
 
 ```gherkin
-@cart @R01
+@cart
 Feature: Shopping cart
   As a customer
   I want to manage products in my cart
@@ -289,7 +289,7 @@ Feature: Product information
   I want correct product names, prices and stock status
   So that I know what I am buying
 
-  @R05 @high @regression
+  @high @regression
   Scenario Outline: Catalog shows correct price and stock status
     When the customer browses the full catalog
     Then the product "<product>" should be listed at its catalog price
@@ -305,13 +305,13 @@ Feature: Product information
       | Striped top    | available |
       | White sandals  | sold out  |
 
-  @R03 @high @regression
+  @high @regression
   Scenario: Product page shows the catalog name and price
     Given the customer is viewing the product "Noir jacket"
     Then the product page should show the name "Noir jacket"
     And the product page should show the price "£60.00"
 
-  @R03 @high @negative @regression
+  @high @negative @regression
   Scenario: A sold-out product cannot be added to the cart
     Given the customer is viewing the product "Brown Shades"
     Then the customer should not be able to add it to the cart
@@ -320,7 +320,7 @@ Feature: Product information
 #### 6.3 Sample feature – Login (`tests/features/login.feature`)
 
 ```gherkin
-@login @R04
+@login
 Feature: Customer login
   As a customer
   I want only valid credentials to log me in
@@ -349,7 +349,7 @@ Feature: Customer login
 #### 6.4 Sample feature – Search (`tests/features/search.feature`)
 
 ```gherkin
-@search @R07 @medium
+@search @medium
 Feature: Product search
   As a customer
   I want to find products by keyword
@@ -388,7 +388,7 @@ Reusable steps (e.g. `the customer is viewing the product "..."`, `the cart tota
 | REQ-07 | R06 | Medium | register.feature | Registration is rejected without an email; Registration succeeds (`@data-creating`) | Added on Day 3 |
 | REQ-08 | R07 | Medium | search.feature | Search returns matching products; Search with no matching products | Specified |
 
-Traceability goes through tags: every scenario carries a risk tag `@Rxx`, and the requirement table in section 6 maps each requirement to its risk, so `behave --dry-run --tags=@R01` lists the scenarios behind REQ-01 and REQ-02.
+Traceability goes through tags: every feature carries a feature-area tag (`@cart`, `@login` …), and the matrix above maps each requirement to its feature file, so `behave --dry-run --tags=@cart` lists the scenarios behind REQ-01 and REQ-02.
 
 #### 7.2 Planned Python project structure (built on Day 2)
 
@@ -421,7 +421,7 @@ sauce-demo-unit1-bdd/
 | Declarative Gherkin      | No locators, URLs or `wait` in feature files                                     |                  |
 | Independence             | Each scenario runs on its own, regardless of order                               |                  |
 | Step reuse               | No two steps with the same meaning but different wording                         |                  |
-| Traceability             | Every scenario has a risk tag `@Rxx`                                                  |                  |
+| Traceability             | Every feature has a feature-area tag (`@cart`, `@login` …)                             |                  |
 | Data separated from code | Prices, names, handles live in test data / Examples                              |                  |
 | Reporting                | HTML/JSON report, screenshots on failure                                         |                  |
 | Stability                | No `sleep`; three consecutive runs give the same result                          |                  |
@@ -443,7 +443,7 @@ Day 2 turns the Day 1 Gherkin specs into a runnable behave + Selenium framework:
 | Topic            | Cucumber/SpecFlow architecture, feature design, step definitions, hooks, tags, reporting patterns                                                                   |
 | AUT              | [Sauce Demo](https://sauce-demo.myshopify.com/)                                                                                                                     |
 | Stack            | Python 3.11+, behave 1.3 (Cucumber for Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                                          |
-| Input from Day 1 | Risk register, REQ-01…REQ-08, draft features tagged with risks `@Rxx`                                                                                              |
+| Input from Day 1 | Risk register, REQ-01…REQ-08, draft features tagged with risk levels (`@critical`, `@high`)                                                                          |
 | Day 2 output     | A runnable starter framework; `behave --dry-run` reports no undefined steps; cart + login run for real                                                              |
 | Scope            | REQ-01, REQ-02 (cart, R01 Critical) and REQ-05 (login, R04 High) – the two highest risks that can be fully automated. The remaining requirements are done on Day 3. |
 
@@ -501,12 +501,12 @@ Each feature file covers one business capability; Feature-level tags apply to ev
 | `Background`                        | A Given repeated in every scenario of the file | `Given the customer is on the login page` |
 | `Scenario`                          | One concrete example                           | Add an in-stock product to the cart       |
 | `Scenario Outline` + `Examples`     | Same behaviour, several data sets              | 2 × Noir jacket, 3 × Striped top          |
-| `@tag`                              | Classifying for filtering and traceability     | `@R01 @critical @smoke`                |
+| `@tag`                              | Classifying for filtering and traceability     | `@cart @critical @smoke`               |
 
 `tests/features/cart.feature`:
 
 ```gherkin
-@cart @R01
+@cart
 Feature: Shopping cart
   As a customer
   I want to manage products in my cart
@@ -548,7 +548,7 @@ Feature: Shopping cart
 `tests/features/login.feature` (shows `Background` and negative cases):
 
 ```gherkin
-@login @R04
+@login
 Feature: Customer login
   As a customer
   I want only valid credentials to log me in
@@ -793,24 +793,23 @@ The file in the zip adds a few lines for Docker/CI (`--no-sandbox`, `CHROMEDRIVE
 
 ### 5. Tags
 
-Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), and link scenarios to requirements and risks for traceability.
+Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), and link scenarios to requirements through the feature-area tag.
 
 | Group        | Tags                                | Used on Day 2                             |
 |--------------|-------------------------------------|-------------------------------------------|
 | Suite        | `@smoke`, `@regression`             | Add an in-stock product = `@smoke`        |
 | Risk level   | `@critical`, `@high`, `@medium`     | Cart `@critical`, login `@high`           |
-| Traceability | `@R01`…`@R10` | `@R01` (cart), `@R04` (login) |
 | Case type    | `@negative`                         | Invalid login                             |
 | Control      | `@manual`, `@wip`, `@data-creating` | Excluded by default                       |
-| Capability   | `@cart`, `@login`                   | Feature-level tags                        |
+| Feature area | `@cart`, `@login`                   | Feature-level tags, mapped to requirements |
 
 Filter expressions (behave 1.3, tag expressions v2):
 
 ```bash
 behave --tags=@smoke                                  # smoke only
 behave --tags="@critical and not @negative"           # critical, no negative cases
-behave --tags="@R01 or @R04"                          # by risk (several risks)
-behave --tags=@R01                                    # by risk
+behave --tags="@cart or @login"                       # by feature area (several)
+behave --tags=@cart                                   # by feature area
 behave --tags="@data-creating or not @data-creating"  # everything, overriding the default
 ```
 
@@ -902,7 +901,7 @@ These numbers come from a run against a local Shopify-structured mock store. On 
 
 #### 7.4 Bridge to Day 3
 
-Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, and `search_steps.py`; traceability comes from the `@Rxx` risk tags.
+Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, and `search_steps.py`; traceability comes from the feature-area tags (`@cart`, `@checkout` …).
 
 ---
 
@@ -910,7 +909,7 @@ Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `r
 
 Unit 1 · LO2 · Assignment/Lab · 150 min · Hybrid · Code: repo `sauce-demo-unit1-bdd` (behave + Selenium)
 
-Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with Examples) cover all 8 Unit 1 requirements, one command produces HTML/JSON/JUnit/Allure reports, and the `@Rxx` risk tags keep every scenario traceable.
+Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with Examples) cover all 8 Unit 1 requirements, one command produces HTML/JSON/JUnit/Allure reports, and the feature-area tags keep every scenario traceable.
 
 ### 1. What is added on top of Day 2
 
@@ -921,7 +920,7 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 | Registration spec | `tests/features/register.feature` | REQ-07: negative case + `@data-creating` positive case |
 | Search spec | `tests/features/search.feature` | REQ-08: results / no results |
 | New steps | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
-| Traceability | `@Rxx` risk tag on every scenario | `behave --dry-run --tags=@R02` lists the scenarios of a risk; the Day 1 requirement table maps each requirement to its risk |
+| Traceability | Feature-area tag on every feature (`@cart`, `@checkout` …) | `behave --dry-run --tags=@checkout` lists the scenarios of one area; the Day 1 traceability matrix maps each requirement to its feature file |
 | Test data | `dataset/products.json` | Product names, handles, prices read by the steps |
 
 ### 2. Executable specifications
@@ -938,7 +937,7 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 Example of a data-driven spec (`tests/features/product.feature`):
 
 ```gherkin
-@R05 @high @regression
+@high @regression
 Scenario Outline: Catalog shows correct price and stock status
   When the customer browses the full catalog
   Then the product "<product>" should be listed at its catalog price
@@ -997,14 +996,14 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `behave` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
-| Traceability | `behave --dry-run --tags=@R01` … `@R07`: every automated risk lists at least one scenario |
+| Traceability | `behave --dry-run --tags=@cart` … `@search`: every feature area lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
 
 ### 7. Lab exercises
 
 1. Add a scenario for REQ-02: changing the quantity to 0 removes the line. Which existing steps can you reuse?
-2. Add a scenario to `search.feature` that searches for "JACKET" (upper case). Does `behave --dry-run --tags=@R07` list it without code changes?
+2. Add a scenario to `search.feature` that searches for "JACKET" (upper case). Does `behave --dry-run --tags=@search` list it without code changes?
 3. Break one price in `dataset/products.json`, run `behave`, and find the failure screenshot in `reports/screenshots/`.
 
 ---
@@ -1020,7 +1019,7 @@ The Day 3 framework scores 15/16 on the review rubric after the fixes made durin
 ```bash
 cd sauce-demo-unit1-bdd
 behave --dry-run                                   # undefined or ambiguous steps
-behave --dry-run --tags=@R02                       # scenarios behind one risk (repeat per risk)
+behave --dry-run --tags=@checkout                  # scenarios of one feature area (repeat per area)
 behave                                             # full run
 ```
 
@@ -1038,7 +1037,7 @@ Review checklist:
 | --- | --- | --- |
 | Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in feature files | first search above |
 | Scenario size | At most 7 steps | read each feature |
-| Traceability | Every scenario has a risk tag `@Rxx` | `behave --dry-run --tags=@Rxx`; compare with the Day 1 requirement table |
+| Traceability | Every feature has a feature-area tag | `behave --dry-run --tags=@cart`; compare with the Day 1 traceability matrix |
 | Step reuse | No unused, ambiguous or near-duplicate step definitions | `behave --dry-run` + read `tests/steps/` |
 | Stability | No `sleep()` in steps or pages | second search above |
 | Data separation | No prices hard-coded in step code | third search above |

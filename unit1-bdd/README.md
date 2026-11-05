@@ -6,7 +6,7 @@ Plain BDD Cucumber project: Gherkin features, step definitions, hooks, Page Obje
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
-| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `tests/features/` (risk tags `@Rxx`) |
+| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `tests/features/` (risk-level tags `@critical`, `@high`, `@medium`) |
 | 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `tests/features/cart.feature`, `login.feature`, `tests/environment.py`, `behave.ini`, `tests/steps/`, `pages/` |
 | 3 | Lab: executable specs, reusable steps, traceable reports | Day 3 section | all features, behave formatters |
 | 4 | Framework review | Day 4 section | review checklist + `behave --dry-run` |
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 behave --dry-run                    # every step implemented?
 behave                              # default suite (not @manual / @wip / @data-creating)
 behave --tags=@smoke
-behave --tags=@R02                  # every scenario for one risk
+behave --tags=@checkout             # every scenario of one feature area
 behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # HTML + JSON reports
 behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results
 ```

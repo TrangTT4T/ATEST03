@@ -1,6 +1,6 @@
 """Network control (Day 6-7): interception, request assertions, fault injection, throttling.
 
-Risk R09 (manual in Unit 1): the shop keeps working when third-party services fail.
+Third-party risk (manual in Unit 1): the shop keeps working when third-party services fail.
 """
 import pytest
 from playwright.sync_api import expect
@@ -8,7 +8,6 @@ from playwright.sync_api import expect
 pytestmark = [pytest.mark.network, pytest.mark.regression]
 
 
-@pytest.mark.R09
 @pytest.mark.medium
 def test_third_party_calls_are_blocked_and_shop_still_works(shop, page, block_third_party, products):
     shop.home.open()
@@ -22,7 +21,6 @@ def test_third_party_calls_are_blocked_and_shop_still_works(shop, page, block_th
     assert shop.cart.open().total_quantity() == 1
 
 
-@pytest.mark.R01
 @pytest.mark.critical
 def test_add_to_cart_posts_the_product_form(shop, page, products):
     shop.product.open_product(products["Striped top"]["handle"])
@@ -31,7 +29,6 @@ def test_add_to_cart_posts_the_product_form(shop, page, products):
     assert "id=" in (request_info.value.post_data or ""), "add-to-cart POST carries no product id"
 
 
-@pytest.mark.R01
 @pytest.mark.critical
 @pytest.mark.negative
 def test_failed_add_to_cart_request_does_not_add_the_product(shop, page, products):
@@ -43,7 +40,6 @@ def test_failed_add_to_cart_request_does_not_add_the_product(shop, page, product
     expect(shop.cart.open().quantity_inputs).to_have_count(0)
 
 
-@pytest.mark.R05
 @pytest.mark.high
 @pytest.mark.only_browser("chromium")
 def test_catalog_loads_on_a_slow_network(shop, page, context, products):

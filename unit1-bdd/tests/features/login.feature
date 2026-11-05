@@ -1,4 +1,4 @@
-@login @R04
+@login
 Feature: Customer login
   As a customer
   I want only valid credentials to log me in

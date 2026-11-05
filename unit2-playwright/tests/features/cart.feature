@@ -1,4 +1,4 @@
-@cart @R01
+@cart
 Feature: Shopping cart
   As a customer
   I want to manage products in my cart

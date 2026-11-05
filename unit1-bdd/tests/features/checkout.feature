@@ -1,4 +1,4 @@
-@checkout @R02
+@checkout
 Feature: Proceed to checkout
   As a customer
   I want to go from my cart to checkout

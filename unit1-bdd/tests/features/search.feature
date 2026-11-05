@@ -1,4 +1,4 @@
-@search @R07 @medium
+@search @medium
 Feature: Product search
   As a customer
   I want to find products by keyword

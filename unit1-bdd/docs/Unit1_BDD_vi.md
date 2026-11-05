@@ -130,7 +130,7 @@ Sauce Demo là store Shopify, nhóm test không có mã nguồn hay API nội b�
 | `@smoke`                          | Luồng tối thiểu: trang chủ mở, thêm vào giỏ, sang checkout | Mỗi lần deploy, \< 5 phút          |
 | `@regression`                     | Toàn bộ scenario đã automate                               | Hằng đêm                           |
 | `@critical` / `@high` / `@medium` | Mức rủi ro từ bảng mục 2                                   | Lọc khi thời gian chạy bị giới hạn |
-| `@R01` … `@R10`                   | Risk ID, dùng cho truy vết                                 | Báo cáo coverage                   |
+| `@cart`, `@login`, `@checkout` …    | Nhóm chức năng, dùng cho truy vết                          | Chạy một nhóm                      |
 | `@negative`                       | Case âm                                                    | –                                  |
 | `@data-creating`                  | Tạo dữ liệu thật trên store                                | Chỉ chạy khi được phép             |
 | `@wip`, `@manual`                 | Đang viết / chỉ kiểm thủ công                              | Loại khỏi pipeline                 |
@@ -197,7 +197,7 @@ Ví dụ Example Mapping cho story Giỏ hàng:
 
 - Mỗi scenario độc lập, không phụ thuộc thứ tự chạy.
 
-- Gắn tag rủi ro và requirement để truy vết.
+- Gắn tag nhóm chức năng và mức rủi ro để truy vết và lọc.
 
 #### 5.3 Ví dụ xấu và tốt
 
@@ -215,7 +215,7 @@ Scenario: add to cart
 Tốt (declarative, nghiệp vụ):
 
 ```gherkin
-@R01 @critical @smoke
+@critical @smoke
 Scenario: Customer adds an in-stock product to the cart
   Given the customer is viewing the product "Grey jacket"
   When the customer adds the product to the cart
@@ -241,7 +241,7 @@ Tám requirement dưới đây phủ toàn bộ rủi ro Critical, High và Medi
 #### 6.1 Feature mẫu – Giỏ hàng (`tests/features/cart.feature`)
 
 ```gherkin
-@cart @R01
+@cart
 Feature: Shopping cart
   As a customer
   I want to manage products in my cart
@@ -289,7 +289,7 @@ Feature: Product information
   I want correct product names, prices and stock status
   So that I know what I am buying
 
-  @R05 @high @regression
+  @high @regression
   Scenario Outline: Catalog shows correct price and stock status
     When the customer browses the full catalog
     Then the product "<product>" should be listed at its catalog price
@@ -305,13 +305,13 @@ Feature: Product information
       | Striped top    | available |
       | White sandals  | sold out  |
 
-  @R03 @high @regression
+  @high @regression
   Scenario: Product page shows the catalog name and price
     Given the customer is viewing the product "Noir jacket"
     Then the product page should show the name "Noir jacket"
     And the product page should show the price "£60.00"
 
-  @R03 @high @negative @regression
+  @high @negative @regression
   Scenario: A sold-out product cannot be added to the cart
     Given the customer is viewing the product "Brown Shades"
     Then the customer should not be able to add it to the cart
@@ -320,7 +320,7 @@ Feature: Product information
 #### 6.3 Feature mẫu – Đăng nhập (`tests/features/login.feature`)
 
 ```gherkin
-@login @R04
+@login
 Feature: Customer login
   As a customer
   I want only valid credentials to log me in
@@ -349,7 +349,7 @@ Feature: Customer login
 #### 6.4 Feature mẫu – Tìm kiếm (`tests/features/search.feature`)
 
 ```gherkin
-@search @R07 @medium
+@search @medium
 Feature: Product search
   As a customer
   I want to find products by keyword
@@ -388,7 +388,7 @@ Các step dùng lại được (ví dụ `the customer is viewing the product ".
 | REQ-07 | R06 | Medium | register.feature | Registration is rejected without an email; Registration succeeds (`@data-creating`) | Thêm ở Day 3 |
 | REQ-08 | R07 | Medium | search.feature | Search returns matching products; Search with no matching products | Đã đặc tả |
 
-Truy vết dựa vào tag: mỗi scenario mang tag rủi ro `@Rxx`, và bảng requirement ở mục 6 nối mỗi requirement với rủi ro của nó, nên `behave --dry-run --tags=@R01` liệt kê các scenario của REQ-01 và REQ-02.
+Truy vết dựa vào tag: mỗi feature mang tag nhóm chức năng (`@cart`, `@login` …), và ma trận ở trên nối mỗi requirement với feature file của nó, nên `behave --dry-run --tags=@cart` liệt kê các scenario của REQ-01 và REQ-02.
 
 #### 7.2 Cấu trúc project Python dự kiến (dựng ở Day 2)
 
@@ -421,7 +421,7 @@ sauce-demo-unit1-bdd/
 | Gherkin declarative    | Không có locator, URL, `wait` trong feature file                       |               |
 | Độc lập                | Mỗi scenario chạy riêng lẻ được, không phụ thuộc thứ tự                |               |
 | Tái sử dụng step       | Không có hai step cùng nghĩa khác câu chữ                              |               |
-| Truy vết               | Mọi scenario có tag rủi ro `@Rxx`                                          |               |
+| Truy vết               | Mọi feature có tag nhóm chức năng (`@cart`, `@login` …)                    |               |
 | Dữ liệu tách khỏi code | Giá, tên SP, handle nằm trong test data / Examples                     |               |
 | Báo cáo                | Có báo cáo HTML/JSON, ảnh chụp khi fail                                |               |
 | Ổn định                | Không dùng `sleep`; chạy 3 lần liên tiếp cùng kết quả                  |               |
@@ -443,7 +443,7 @@ Day 2 biến các đặc tả Gherkin của Day 1 thành một framework behave 
 | Chủ đề           | Kiến trúc Cucumber/SpecFlow, thiết kế feature, step definitions, hooks, tags, reporting patterns                                                     |
 | AUT              | [Sauce Demo](https://sauce-demo.myshopify.com/)                                                                                                      |
 | Stack            | Python 3.11+, behave 1.3 (Cucumber cho Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                           |
-| Đầu vào từ Day 1 | Risk register, REQ-01…REQ-08, feature nháp có tag rủi ro `@Rxx`                                                                                 |
+| Đầu vào từ Day 1 | Risk register, REQ-01…REQ-08, feature nháp có tag mức rủi ro (`@critical`, `@high`)                                                              |
 | Đầu ra Day 2     | Framework khởi đầu chạy được; `behave --dry-run` không còn step thiếu; cart + login chạy thật                                                        |
 | Phạm vi          | REQ-01, REQ-02 (giỏ hàng, R01 Critical) và REQ-05 (đăng nhập, R04 High) – hai rủi ro cao nhất có thể automate trọn vẹn. Các REQ còn lại làm ở Day 3. |
 
@@ -501,12 +501,12 @@ Mỗi feature file ứng với một khả năng nghiệp vụ; tag ở cấp Fe
 | `Background`                              | Bước Given lặp lại ở mọi scenario của file | `Given the customer is on the login page` |
 | `Scenario`                                | Một ví dụ cụ thể                           | Add an in-stock product to the cart       |
 | `Scenario Outline` + `Examples`           | Cùng hành vi, nhiều bộ dữ liệu             | 2 × Noir jacket, 3 × Striped top          |
-| `@tag`                                    | Phân loại để lọc và truy vết               | `@R01 @critical @smoke`                |
+| `@tag`                                    | Phân loại để lọc và truy vết               | `@cart @critical @smoke`               |
 
 `tests/features/cart.feature`:
 
 ```gherkin
-@cart @R01
+@cart
 Feature: Shopping cart
   As a customer
   I want to manage products in my cart
@@ -548,7 +548,7 @@ Feature: Shopping cart
 `tests/features/login.feature` (minh họa `Background` và case âm):
 
 ```gherkin
-@login @R04
+@login
 Feature: Customer login
   As a customer
   I want only valid credentials to log me in
@@ -793,24 +793,23 @@ Bản trong file zip có thêm vài dòng cho Docker/CI (`--no-sandbox`, `CHROME
 
 ### 5. Tags
 
-Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua `@manual`), và gắn scenario với requirement/rủi ro để truy vết.
+Tag làm ba việc: chọn scenario sẽ chạy, điều khiển hook (bỏ qua `@manual`), và gắn scenario với requirement qua tag nhóm chức năng.
 
 | Nhóm       | Tag                                 | Dùng trong Day 2                          |
 |------------|-------------------------------------|-------------------------------------------|
 | Bộ chạy    | `@smoke`, `@regression`             | Add an in-stock product = `@smoke`        |
 | Mức rủi ro | `@critical`, `@high`, `@medium`     | Giỏ hàng `@critical`, đăng nhập `@high`   |
-| Truy vết | `@R01`…`@R10` | `@R01` (cart), `@R04` (login) |
 | Loại case  | `@negative`                         | Login sai thông tin                       |
 | Kiểm soát  | `@manual`, `@wip`, `@data-creating` | Bị loại theo mặc định                     |
-| Khả năng   | `@cart`, `@login`                   | Tag cấp Feature                           |
+| Nhóm chức năng | `@cart`, `@login`               | Tag cấp Feature, nối với requirement      |
 
 Biểu thức lọc (behave 1.3, cú pháp tag expression v2):
 
 ```bash
 behave --tags=@smoke                                  # chỉ smoke
 behave --tags="@critical and not @negative"           # critical, bỏ case âm
-behave --tags="@R01 or @R04"                          # theo nhiều rủi ro
-behave --tags=@R01                                    # theo rủi ro
+behave --tags="@cart or @login"                       # theo nhiều nhóm chức năng
+behave --tags=@cart                                   # theo nhóm chức năng
 behave --tags="@data-creating or not @data-creating"  # chạy tất cả, ghi đè mặc định
 ```
 
@@ -902,7 +901,7 @@ Các số trên đã chạy trên một site giả lập cấu trúc Shopify. Ch
 
 #### 7.4 Cầu nối sang Day 3
 
-Day 3 giữ nguyên kiến trúc này và thêm: `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (hoàn thành REQ-01…REQ-08), `product_steps.py`, và `search_steps.py`; truy vết dựa vào tag rủi ro `@Rxx`.
+Day 3 giữ nguyên kiến trúc này và thêm: `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (hoàn thành REQ-01…REQ-08), `product_steps.py`, và `search_steps.py`; truy vết dựa vào tag nhóm chức năng (`@cart`, `@checkout` …).
 
 ---
 
@@ -910,7 +909,7 @@ Day 3 giữ nguyên kiến trúc này và thêm: `checkout.feature`, `product.fe
 
 Unit 1 · LO2 · Assignment/Lab · 150 phút · Hybrid · Code: repo `sauce-demo-unit1-bdd` (behave + Selenium)
 
-Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần chạy tính cả Examples) phủ đủ 8 requirement của Unit 1; một lệnh duy nhất xuất báo cáo HTML/JSON/JUnit/Allure, và tag rủi ro `@Rxx` giúp truy vết mọi scenario.
+Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần chạy tính cả Examples) phủ đủ 8 requirement của Unit 1; một lệnh duy nhất xuất báo cáo HTML/JSON/JUnit/Allure, và tag nhóm chức năng giúp truy vết mọi scenario.
 
 ### 1. Phần thêm vào so với Day 2
 
@@ -921,7 +920,7 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 | Đặc tả đăng ký | `tests/features/register.feature` | REQ-07: case âm + case dương tag `@data-creating` |
 | Đặc tả tìm kiếm | `tests/features/search.feature` | REQ-08: có / không có kết quả |
 | Step mới | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, trang chi tiết, tìm kiếm |
-| Truy vết | Tag rủi ro `@Rxx` trên mọi scenario | `behave --dry-run --tags=@R02` liệt kê scenario của một rủi ro; bảng requirement của Day 1 nối mỗi requirement với rủi ro |
+| Truy vết | Tag nhóm chức năng trên mọi feature (`@cart`, `@checkout` …) | `behave --dry-run --tags=@checkout` liệt kê scenario của một nhóm; ma trận truy vết của Day 1 nối mỗi requirement với feature file |
 | Dữ liệu test | `dataset/products.json` | Tên, handle, giá sản phẩm mà step đọc |
 
 ### 2. Đặc tả chạy được
@@ -938,7 +937,7 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 Ví dụ đặc tả data-driven (`tests/features/product.feature`):
 
 ```gherkin
-@R05 @high @regression
+@high @regression
 Scenario Outline: Catalog shows correct price and stock status
   When the customer browses the full catalog
   Then the product "<product>" should be listed at its catalog price
@@ -997,14 +996,14 @@ behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f p
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
 | `behave` | 6 feature, 21 scenario pass, 1 bỏ qua (`@data-creating`), 70 step pass |
-| Truy vết | `behave --dry-run --tags=@R01` … `@R07`: rủi ro nào được automate cũng có ít nhất một scenario |
+| Truy vết | `behave --dry-run --tags=@cart` … `@search`: nhóm chức năng nào cũng có ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
 
 ### 7. Bài tập lab
 
 1. Thêm scenario cho REQ-02: đổi số lượng về 0 thì dòng bị xóa. Dùng lại được những step nào?
-2. Thêm vào `search.feature` một scenario tìm "JACKET" (chữ hoa). `behave --dry-run --tags=@R07` có liệt kê nó mà không sửa code không?
+2. Thêm vào `search.feature` một scenario tìm "JACKET" (chữ hoa). `behave --dry-run --tags=@search` có liệt kê nó mà không sửa code không?
 3. Sửa sai một giá trong `dataset/products.json`, chạy `behave`, tìm ảnh chụp step fail trong `reports/screenshots/`.
 
 ---
@@ -1020,7 +1019,7 @@ Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi re
 ```bash
 cd sauce-demo-unit1-bdd
 behave --dry-run                                   # step chưa có code hoặc bị mơ hồ
-behave --dry-run --tags=@R02                       # các scenario của một rủi ro (lặp cho từng rủi ro)
+behave --dry-run --tags=@checkout                  # các scenario của một nhóm chức năng (lặp cho từng nhóm)
 behave                                             # chạy toàn bộ
 ```
 
@@ -1038,7 +1037,7 @@ Checklist review:
 | --- | --- | --- |
 | Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong feature | lệnh tìm thứ nhất |
 | Độ dài scenario | Tối đa 7 step | đọc từng feature |
-| Truy vết | Mọi scenario có tag rủi ro `@Rxx` | `behave --dry-run --tags=@Rxx`; đối chiếu bảng requirement của Day 1 |
+| Truy vết | Mọi feature có tag nhóm chức năng | `behave --dry-run --tags=@cart`; đối chiếu ma trận truy vết của Day 1 |
 | Tái sử dụng step | Không có step thừa, mơ hồ hoặc gần trùng | `behave --dry-run` + đọc `tests/steps/` |
 | Ổn định | Không `sleep()` trong steps hoặc pages | lệnh tìm thứ hai |
 | Tách dữ liệu | Không gõ cứng giá trong code step | lệnh tìm thứ ba |
