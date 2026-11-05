@@ -1,8 +1,8 @@
 # Unit 2 – Playwright End-to-End Automation (Sauce Demo)
 
-pytest + pytest-bdd + Playwright · Website kiểm thử: https://sauce-demo.myshopify.com · Code: chính repo này
+pytest + pytest-bdd + Playwright · Website kiểm thử: https://sauce-demo.myshopify.com · Code: `unit2-playwright/`
 
-Unit 2 kế thừa Unit 1: cùng các feature Gherkin, dữ liệu test, tag rủi ro và requirement, chạy trên Playwright (Day 5); thêm tracing, kiểm soát network, lưu phiên đăng nhập, chạy song song (Day 6); áp dụng cho các luồng ưu tiên trong bài lab (Day 7); và làm cho ổn định bằng kiểm soát flaky và kiểm tra độ ổn định (Day 8).
+Unit 2 kế thừa Unit 1: cùng các feature Gherkin, dữ liệu test và tag rủi ro, chạy trên Playwright (Day 5); thêm tracing, kiểm soát network, lưu phiên đăng nhập, chạy song song (Day 6); áp dụng cho các luồng ưu tiên trong bài lab (Day 7); và làm cho ổn định bằng phân tích lỗi và kiểm soát flaky (Day 8). Mọi thứ chạy bằng lệnh `pytest`.
 
 | Day | Nội dung | LO | Hình thức | Phút | Format |
 | --- | --- | --- | --- | --- | --- |
@@ -14,29 +14,43 @@ Unit 2 kế thừa Unit 1: cùng các feature Gherkin, dữ liệu test, tag r�
 
 Nội dung: Day 5 – Kiến trúc · Day 6 – Tracing, network, đăng nhập, song song · Day 7 – Lab · Day 8 – Ôn tập + độ tin cậy
 
+```text
+unit2-playwright/
+├── pytest.ini                   # base_url, thư mục feature, tracing, báo cáo, marker
+├── requirements.txt
+├── dataset/products.json        # cùng dữ liệu test với Unit 1
+├── pages/                       # Page Object Playwright (chuyển từ Unit 1)
+└── tests/
+    ├── features/                # các file Gherkin của Unit 1, giữ nguyên
+    ├── steps/shop_steps.py      # các câu step của Unit 1 trên Playwright
+    ├── conftest.py              # fixture: dữ liệu, cô lập, kiểm soát network, đăng nhập
+    ├── test_bdd_features.py     # chạy mọi feature file (pytest-bdd)
+    ├── test_network.py          # chặn request, kiểm tra request, giả lập lỗi, mạng chậm
+    └── test_auth_state.py       # phiên đăng nhập đã lưu + kiểm tra cô lập
+```
+
 ---
 
 ## Day 5 – Playwright Architecture: Browser Contexts, Locators, Fixtures, Assertions & Isolation
 
-Unit 2 · LO3 · Concept/Lecture · 120 phút · Virtual · Code: repo `sauce-demo-unit2-playwright` (Python, pytest-playwright, pytest-bdd)
+Unit 2 · LO3 · Concept/Lecture · 120 phút · Virtual
 
-Unit 2 giữ nguyên mọi thứ Unit 1 đã xây và chỉ đổi "động cơ": cùng 6 feature file, cùng dữ liệu dùng chung, cùng tag rủi ro và requirement, giờ chạy trên Playwright; fixture của pytest thay cho hook của behave.
+Unit 2 giữ những gì Unit 1 đã xây và đổi "động cơ": cùng 6 feature file và tag rủi ro, giờ chạy trên Playwright; fixture của pytest thay cho hook của behave.
 
 ### 1. Kế thừa từ Unit 1 và phần mới
 
 | Unit 1 (behave + Selenium) | Unit 2 (pytest + Playwright) | Trạng thái |
 | --- | --- | --- |
-| `tests/features/*.feature` của Unit 1 | Chép nguyên vẹn vào `tests/features/`, chạy qua `tests/test_bdd_features.py` (pytest-bdd) | Kế thừa nguyên vẹn |
-| `dataset/products.json`, `requirements.json`, `risk_register.csv` | Cùng file | Kế thừa, thêm REQ-09/REQ-10 |
-| Tag `@REQ-xx`, `@Rxx`, `@critical`, `@smoke` | Thành marker pytest: `pytest -m smoke`, `-m R01` | Kế thừa |
+| `tests/features/*.feature` | Cùng file trong `tests/features/`, chạy qua `tests/test_bdd_features.py` (pytest-bdd) | Kế thừa nguyên vẹn |
+| `dataset/products.json` | Cùng file | Kế thừa |
+| Tag `@Rxx`, `@critical`, `@smoke`, `@negative` | Thành marker pytest: `pytest -m smoke`, `pytest -m R01` | Kế thừa |
 | Page Object (`pages/`) | Cùng tên class, dùng `Locator` của Playwright thay `WebElement` | Chuyển đổi |
 | Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, cùng câu chữ | Chuyển đổi |
-| Hook trong `environment.py` | Fixture trong `tests/conftest.py` | Thay thế |
+| Hook trong `tests/environment.py` | Fixture trong `tests/conftest.py` | Thay thế |
 | Explicit wait `WebDriverWait` | Action tự chờ + `expect()` tự thử lại | Thay thế |
 | Trình duyệt mới mỗi scenario | **Browser context** mới mỗi test (rẻ hơn nhiều) | Cải tiến |
 | Ảnh khi fail | Ảnh + video + **trace** khi fail | Mở rộng (Day 6) |
-| Ma trận truy vết | Cùng ý tưởng, chạy trong pytest, đúng cả khi chạy song song | Mở rộng (Day 6) |
-| — | Chặn/giả lập network, lưu trạng thái đăng nhập, chạy song song, phát hiện flaky | Mới (Day 6–8) |
+| — | Chặn/giả lập network, lưu phiên đăng nhập, chạy song song | Mới (Day 6) |
 
 ### 2. Kiến trúc Playwright
 
@@ -52,8 +66,6 @@ Tạo context chỉ mất vài mili giây, nên mỗi test có giỏ hàng sạc
 
 ### 3. Locator
 
-Thứ tự ưu tiên trong `pages/`:
-
 | Ưu tiên | Locator | Ví dụ trong `pages/` |
 | --- | --- | --- |
 | 1 | Role + tên hiển thị | `page.get_by_role("link", name=re.compile(r"My Cart \(\d+\)"))` |
@@ -61,7 +73,7 @@ Thứ tự ưu tiên trong `pages/`:
 | 3 | Text | `page.get_by_text("£60.00")` |
 | 4 | Thuộc tính ổn định / action của form | `form[action*='/cart/add']`, `input[name^='updates']` |
 | 5 | Locator có filter | `locator("tr, li, div").filter(has=get_by_role("link", name="Striped top"))` |
-| Không dùng | Theo vị trí | `:nth-child`, `xpath=(//a)[3]` (bị `scripts/stability_check.py` chặn) |
+| Không dùng | Theo vị trí | `:nth-child`, `xpath=(//a)[3]` |
 
 ### 4. Fixture (`tests/conftest.py`)
 
@@ -111,7 +123,7 @@ def cart_count(shop, count):
 ### 7. Chạy
 
 ```bash
-cd sauce-demo-unit2-playwright
+cd unit2-playwright
 pip install -r requirements.txt
 playwright install chromium
 pytest --collect-only -q          # 25 test: 21 từ feature của Unit 1 + 4 test riêng của Playwright
@@ -130,9 +142,9 @@ pytest --headed --slowmo 300      # xem trình duyệt chạy
 
 ## Day 6 – Tracing, Network Interception, Authentication State, Parallel Execution & Reporting
 
-Unit 2 · LO3 · Concept/Lecture · 120 phút · Virtual · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Concept/Lecture · 120 phút · Virtual
 
-Day 6 thêm năm khả năng mà Unit 1 chưa có: trace đầy đủ cho mỗi test fail, kiểm soát lưu lượng network, dùng lại phiên đăng nhập, chạy song song, và báo cáo vẫn đúng khi chạy song song.
+Day 6 thêm những gì Unit 1 chưa có: trace đầy đủ cho mỗi test fail, kiểm soát lưu lượng network, dùng lại phiên đăng nhập và chạy song song.
 
 ### 1. Tracing (mở rộng ảnh chụp khi fail của Unit 1)
 
@@ -151,13 +163,10 @@ addopts =
 | `after_step` lưu một ảnh PNG | `test-results/<test>/trace.zip`, `test-failed-1.png`, `video.webm` |
 | Chỉ thấy màn hình cuối | Mọi action, DOM trước/sau, console, network, dòng code |
 
-Mở trace:
-
 ```bash
-playwright show-trace test-results/<thư-mục-test>/trace.zip
+playwright show-trace test-results/<thư-mục-test>/trace.zip   # mở trace
+pytest --tracing on                                           # giữ trace cho mọi test khi debug
 ```
-
-Khi debug muốn có trace cho mọi test: `pytest --tracing on`.
 
 ### 2. Chặn và giả lập network
 
@@ -183,18 +192,18 @@ def block_third_party(request, context: BrowserContext, base_url: str):
     yield blocked
 ```
 
-Cho phép: host của store và `*.shopify.com`, `*.myshopify.com`, `*.shopifycdn.com`. Mọi host khác (Facebook, Twitter, Pinterest, ứng dụng Sauce) bị hủy. Nhờ vậy rủi ro R09 (kiểm thủ công ở Unit 1) trở thành REQ-09, được test tự động.
+Cho phép: host của store và `*.shopify.com`, `*.myshopify.com`, `*.shopifycdn.com`. Mọi host khác (Facebook, Twitter, Pinterest, ứng dụng Sauce) bị hủy. Rủi ro R09 (widget bên thứ ba), vốn kiểm thủ công ở Unit 1, giờ test được.
 
 #### 2.2 Bốn test network (`tests/test_network.py`)
 
-| Test | Kỹ thuật | REQ / Risk |
+| Test | Kỹ thuật | Risk |
 | --- | --- | --- |
-| `test_third_party_calls_are_blocked_and_shop_still_works` | `context.route` + abort, rồi chạy luồng giỏ hàng | REQ-09 / R09 |
-| `test_add_to_cart_posts_the_product_form` | `page.expect_request(...)`: kiểm tra method và body | REQ-01 / R01 |
-| `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: giả lập lỗi server | REQ-01 / R01 |
-| `test_catalog_loads_on_a_slow_network` | CDP của Chromium `Network.emulateNetworkConditions` (trễ 400 ms) | REQ-06 / R05 |
+| `test_third_party_calls_are_blocked_and_shop_still_works` | `context.route` + abort, rồi chạy luồng giỏ hàng | R09 |
+| `test_add_to_cart_posts_the_product_form` | `page.expect_request(...)`: kiểm tra method và body | R01 |
+| `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: giả lập lỗi server | R01 |
+| `test_catalog_loads_on_a_slow_network` | CDP của Chromium `Network.emulateNetworkConditions` (trễ 400 ms) | R05 |
 
-Ví dụ giả lập lỗi:
+Test thường mang cùng marker rủi ro như tag Gherkin (`@pytest.mark.R01`), nên `pytest -m R01` chọn được cả hai loại.
 
 ```python
 page.route("**/cart/add*", lambda route: route.fulfill(status=500, body="Internal Server Error"))
@@ -225,23 +234,23 @@ def customer_state(browser: Browser, base_url: str) -> Path:
     return AUTH_FILE
 ```
 
-Được dùng trong `tests/test_auth_state.py` (REQ-10). File `.auth/customer.json` chứa phiên đăng nhập: không được đưa lên git.
+Được dùng trong `tests/test_auth_state.py` (rủi ro R04). File `.auth/customer.json` chứa phiên đăng nhập: không được đưa lên git.
 
 ```bash
 # Linux/macOS
-SAUCE_EMAIL=you@example.com SAUCE_PASSWORD='...' python run.py auth
+SAUCE_EMAIL=you@example.com SAUCE_PASSWORD='...' pytest -m auth
 # Windows PowerShell
-$env:SAUCE_EMAIL="you@example.com"; $env:SAUCE_PASSWORD="..."; python run.py auth
+$env:SAUCE_EMAIL="you@example.com"; $env:SAUCE_PASSWORD="..."; pytest -m auth
 ```
 
 ### 4. Chạy song song
 
 ```bash
-python run.py parallel        # = pytest -n auto (pytest-xdist)
+pytest -n auto        # pytest-xdist, mỗi CPU một worker
 pytest -n 4
 ```
 
-Chạy song song an toàn vì mỗi test có context riêng (Day 5) và không test nào phụ thuộc test khác. Store demo dùng chung nên trên site thật để `-n` nhỏ.
+An toàn vì mỗi test có context riêng (Day 5) và không test nào phụ thuộc test khác. Store demo dùng chung nên trên site thật để `-n` nhỏ.
 
 ### 5. Mẫu báo cáo
 
@@ -250,36 +259,25 @@ Chạy song song an toàn vì mỗi test có context riêng (Day 5) và không t
 | HTML | pytest-html (`--html` trong `pytest.ini`) | `reports/report.html` |
 | JUnit XML | `--junitxml` | `reports/junit.xml` |
 | Trace, ảnh, video | pytest-playwright | `test-results/` |
-| Ma trận truy vết | hook trong `conftest.py` | `reports/traceability.md` |
 
-Hook truy vết đọc tag Gherkin (`@REQ-01`, `@R01`) và marker `req()` / `risk()` của test thường. Khi chạy xdist, bước collect diễn ra ở worker, nên mã REQ/Risk được gửi kèm qua `item.user_properties` để tiến trình điều phối ghi ma trận:
-
-```python
-def pytest_collection_modifyitems(items):
-    for item in items:
-        names = [m.name for m in item.iter_markers()]
-        reqs = sorted({n for n in names if re.fullmatch(r"REQ-\d+", n)} | {m.args[0] for m in item.iter_markers("req")})
-        risks = sorted({n for n in names if re.fullmatch(r"R\d+", n)} | {m.args[0] for m in item.iter_markers("risk")})
-        item.user_properties.append(("reqs", reqs or ["(none)"]))
-        item.user_properties.append(("risks", risks))
-```
+Lọc theo rủi ro thay cho một báo cáo truy vết riêng: `pytest -m R01 --collect-only -q` liệt kê mọi test của rủi ro R01, cả Gherkin lẫn test thường.
 
 ### 6. Câu hỏi ôn tập
 
 1. Trace cho thấy những gì mà ảnh chụp không cho thấy?
 2. Vì sao `block_third_party` là autouse, và test muốn bỏ qua thì làm thế nào?
 3. Vì sao `customer_state` phải có scope session, và vì sao `.auth/` không được đưa lên git?
-4. Vì sao khi dùng `-n` thì ma trận truy vết phải chuyển sang `user_properties`?
+4. Vì sao chạy `pytest -n auto` an toàn với bộ test này?
 
 ---
 
 ## Day 7 – Playwright Implementation Lab: Prioritised End-to-End Workflows with Fixtures, Tracing & Network Control
 
-Unit 2 · LO3 · Assignment/Lab · 150 phút · Hybrid · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Assignment/Lab · 150 phút · Hybrid
 
-Bài lab tự động hóa các ưu tiên rủi ro của Unit 1 trên Playwright: 25 test trong lần chạy mặc định (21 scenario của Unit 1 + 4 test network), thêm 2 test đăng nhập khi có tài khoản, truy vết đủ 10/10 requirement.
+Bài lab tự động hóa các ưu tiên rủi ro của Unit 1 trên Playwright: 25 test trong lần chạy mặc định (21 scenario của Unit 1 + 4 test network), thêm 2 test đăng nhập khi có tài khoản.
 
-### 1. Luồng nghiệp vụ theo ưu tiên (từ risk register của Unit 1)
+### 1. Luồng nghiệp vụ theo ưu tiên (từ bảng rủi ro của Unit 1)
 
 | Ưu tiên | Luồng | Risk | Test | Kỹ thuật Unit 2 |
 | --- | --- | --- | --- | --- |
@@ -292,32 +290,29 @@ Bài lab tự động hóa các ưu tiên rủi ro của Unit 1 trên Playwright
 | P2 | Tìm kiếm | R07 Medium (9) | 2 scenario | — |
 | P2 | Dịch vụ bên thứ ba lỗi không làm hỏng việc mua hàng | R09 Medium (6) | 1 test network | route của `block_third_party` |
 
-R09 ở Unit 1 kiểm thủ công vì widget hay flaky; chặn chúng ở tầng network giúp rủi ro này test được.
-
 ### 2. File
 
 | File | Vai trò |
 | --- | --- |
-| `tests/test_bdd_features.py` | `scenarios(".")` chạy mọi file trong `tests/features/` (Unit 1 feature files) |
+| `tests/test_bdd_features.py` | `scenarios(".")` chạy mọi file trong `tests/features/` |
 | `tests/steps/shop_steps.py` | Cài đặt bằng Playwright cho mọi step của Unit 1 |
-| `tests/conftest.py` | Fixture, kiểm soát network, trạng thái đăng nhập, hook truy vết |
+| `tests/conftest.py` | Fixture, kiểm soát network, trạng thái đăng nhập |
 | `tests/test_network.py` | Chặn request, kiểm tra request, giả lập lỗi, mạng chậm |
-| `tests/test_auth_state.py` | Phiên đăng nhập đã lưu (REQ-10) và kiểm tra cô lập |
+| `tests/test_auth_state.py` | Phiên đăng nhập đã lưu và kiểm tra cô lập |
 | `pages/` | Page Object chuyển từ Unit 1 |
 | `pytest.ini` | base URL, tracing, báo cáo, bộ lọc marker mặc định, thư mục feature |
-| `run.py` | Các chế độ `smoke`, `parallel`, `auth`, `stability`, `review` |
 
 ### 3. Chạy bài lab
 
 ```bash
-cd sauce-demo-unit2-playwright
+cd unit2-playwright
 pip install -r requirements.txt
 playwright install chromium
-python run.py                  # bộ mặc định
-python run.py smoke            # @smoke: thêm vào giỏ + checkout
-python run.py parallel         # pytest -n auto
-python run.py auth             # cần SAUCE_EMAIL / SAUCE_PASSWORD
-pytest -m R01                  # mọi test của rủi ro R01 (tag Gherkin hoặc marker)
+pytest                              # bộ mặc định
+pytest -m smoke                     # @smoke: thêm vào giỏ + checkout
+pytest -n auto                      # chạy song song
+pytest -m auth                      # cần SAUCE_EMAIL / SAUCE_PASSWORD
+pytest -m R01                       # mọi test của rủi ro R01
 pytest -m "critical and not negative"
 ```
 
@@ -325,10 +320,9 @@ pytest -m "critical and not negative"
 
 | Kiểm tra | Kết quả |
 | --- | --- |
-| `python run.py` | 25 pass, 3 bị lọc (`@auth` ×2, `@data-creating` ×1) |
-| `python run.py parallel` | 25 pass, cùng ma trận truy vết |
-| `python run.py auth` (có tài khoản) | 2 pass |
-| `reports/traceability.md` | REQ-01…REQ-09 có test trong lần chạy mặc định; REQ-10 hiện "no test ran in this session" tới khi chạy `auth` |
+| `pytest` | 25 pass, 3 bị lọc (`@auth` ×2, `@data-creating` ×1) |
+| `pytest -n auto` | 25 pass |
+| `pytest -m auth` (có tài khoản) | 2 pass |
 | Test fail | `test-results/<test>/trace.zip`, ảnh, video |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Khi chạy trên store thật, kiểm tra locator trước (phát hiện F2 của Unit 1).
@@ -337,22 +331,22 @@ pytest -m "critical and not negative"
 
 1. Thêm test giả lập lỗi: trang giỏ hàng trả 503. Khách hàng phải thấy gì? Viết assertion.
 2. Làm `test_catalog_loads_on_a_slow_network` fail bằng cách giảm timeout xuống 1 giây, mở trace và tìm request chậm.
-3. Thêm một scenario vào `tests/features/search.feature`. Chạy ở repo này và repo Unit 1: phải sửa code nào? (Đáp án: không phải sửa, trừ khi câu step là câu mới.)
-4. Chạy `python run.py parallel` ba lần, so thời gian với chạy tuần tự.
+3. Thêm một scenario vào `tests/features/search.feature`. Phải sửa code nào? (Đáp án: không phải sửa, trừ khi câu step là câu mới.)
+4. Chạy `pytest -n auto` ba lần, so thời gian với chạy tuần tự.
 
 ---
 
 ## Day 8 – Topic Revision + Playwright Reliability & Maintainability: Failure Analysis, Flaky-Test Control, Tracing Diagnostics
 
-Unit 2 · LO3 · Guides/Review (60 phút) + Concept/Lecture (120 phút) · Virtual · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Guides/Review (60 phút) + Concept/Lecture (120 phút) · Virtual
 
-Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; phần B biến việc kiểm tra độ ổn định (phát hiện F3 của Unit 1) từ thủ công thành công cụ tự động: chạy lặp và phân loại flaky, kiểm tra tĩnh độ ổn định, và quy trình phân tích lỗi bằng trace.
+Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; phần B làm cho bộ test ổn định bằng quy trình phân tích lỗi dựa trên trace, chạy lặp để lộ test flaky, và checklist bảo trì.
 
 ### Phần A – Ôn tập (60 phút)
 
 | Chủ đề | Unit 1 (Day 1–4) | Unit 2 (Day 5–7) |
 | --- | --- | --- |
-| Đặc tả | Feature Gherkin, tag rủi ro + REQ | Cùng file, chạy bằng pytest-bdd |
+| Đặc tả | Feature Gherkin, tag rủi ro | Cùng file, chạy bằng pytest-bdd |
 | Động cơ | Selenium WebDriver | Playwright (tự chờ, context) |
 | Setup / teardown | Hook của behave | Fixture của pytest (`conftest.py`) |
 | Cô lập | Trình duyệt mới mỗi scenario | Context mới mỗi test |
@@ -361,14 +355,13 @@ Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; ph�
 | Network | Không kiểm soát | Chặn, kiểm tra, giả lập lỗi, giả lập chậm |
 | Đăng nhập | Đăng nhập qua UI mỗi lần | Dùng lại storage state đã lưu |
 | Tốc độ | Tuần tự | Song song `-n auto` |
-| Truy vết | Tag `@REQ-xx` / `@Rxx`, `behave --tags` | Ma trận do hook pytest tạo (`reports/traceability.md`), đúng cả khi song song |
-| Review | Checklist Day 4 (làm tay) | Tự động: `bdd_review.py` + `stability_check.py` + báo cáo flaky |
+| Lọc theo rủi ro | `behave --tags=@R01` | `pytest -m R01` |
 
 Câu hỏi ôn tập:
 
 1. Unit 2 chạy nguyên vẹn những file nào của Unit 1, và vì sao điều đó có ích?
 2. Kể hai rủi ro có kỹ thuật test thay đổi ở Unit 2 và giải thích.
-3. Phát hiện review nào của Unit 1 được công cụ Unit 2 xử lý? (F3 độ ổn định; F5 requirement dùng chung; F7 và F8 phát hiện khi kiểm tra lại.)
+3. Unit 2 xử lý những phát hiện review nào của Unit 1? (F3 độ ổn định; F7 và F8 lỗi chờ submit form, đã sửa ở cả hai Unit.)
 
 ### Phần B – Độ tin cậy và khả năng bảo trì (120 phút)
 
@@ -390,18 +383,19 @@ test fail
 
 #### B2. Kiểm soát test flaky
 
+Chạy cả bộ nhiều lần rồi so; mỗi lần ghi một file JUnit riêng:
+
 ```bash
-python run.py stability --runs 3      # chạy cả bộ 3 lần, ghi reports/runs/run_N.xml
-                                      # rồi scripts/flaky_report.py → reports/flaky_report.md
+pytest --junitxml=reports/run_1.xml
+pytest --junitxml=reports/run_2.xml
+pytest --junitxml=reports/run_3.xml
 ```
 
-`scripts/flaky_report.py` phân loại từng test:
-
-| Trạng thái | Ý nghĩa | Hành động |
+| Kết quả qua các lần chạy | Ý nghĩa | Hành động |
 | --- | --- | --- |
-| stable-pass | pass mọi lần | — |
-| stable-fail | fail mọi lần | lỗi thật hoặc test hỏng: phân tích trace |
-| flaky | lúc pass lúc fail | cách ly, tìm nguyên nhân gốc |
+| lần nào cũng pass | ổn định | — |
+| lần nào cũng fail | lỗi thật hoặc test hỏng | phân tích trace (B1) |
+| lúc pass lúc fail | flaky | cách ly, tìm nguyên nhân gốc |
 
 Cách ly trong lúc tìm nguyên nhân (đã cài pytest-rerunfailures):
 
@@ -411,7 +405,7 @@ def test_something_flaky(...):
     ...
 ```
 
-Chạy lại sẽ che giấu vấn đề, nên đây chỉ là nhãn tạm, không bao giờ đặt `--reruns` mặc định cho cả bộ.
+Chạy `pytest --reruns 1` cho cả bộ cũng làm lộ test flaky: báo cáo HTML đánh dấu chúng là "rerun". Chạy lại sẽ che giấu vấn đề, nên đây chỉ là nhãn tạm, không bao giờ để làm mặc định cho cả bộ.
 
 Nguyên nhân hay gặp và cách code này xử lý:
 
@@ -421,32 +415,33 @@ Nguyên nhân hay gặp và cách code này xử lý:
 | Action sau chạy trước khi request trước xong | `BasePage.submit()` chờ chuyển trang sau mỗi nút submit form; thêm vào giỏ còn chờ response `/cart/add` (phát hiện F7, F8 của Unit 1: ảnh lỗi cho thấy giỏ hàng cũ) |
 | Script bên thứ ba | Fixture autouse `block_third_party` |
 | Trạng thái dùng chung giữa các test | Mỗi test một context; `test_auth_state_does_not_leak_into_other_tests` |
-| Selector theo vị trí | Bị `stability_check.py` chặn |
+| Selector theo vị trí | Không dùng; chỉ role, text và thuộc tính ổn định |
 
-#### B3. Kiểm tra tĩnh độ ổn định
+#### B3. Kiểm tra độ ổn định trước khi commit
 
-```bash
-python run.py review     # 1. scripts/bdd_review.py (checklist Day 4 của Unit 1, tự động hóa) trên tests/features/ và tests/steps/
-                         # 2. scripts/stability_check.py trên test và pages của Unit 2
+Lệnh tìm nhanh (PowerShell; trong Git Bash dùng `grep -rnE`):
+
+```powershell
+Select-String -Path tests\*.py, tests\steps\*.py, pages\*.py -Pattern 'wait_for_timeout|time\.sleep'   # chờ cố định
+Select-String -Path tests\*.py, tests\steps\*.py, pages\*.py -Pattern 'force=True'                     # bấm cưỡng ép
+Select-String -Path tests\*.py, tests\steps\*.py -Pattern ':nth-child|nth=|\.nth\('                     # selector theo vị trí
 ```
-
-`scripts/stability_check.py` báo lỗi (mã thoát 1) khi gặp:
 
 | Quy tắc | Lý do |
 | --- | --- |
-| `wait_for_timeout(` / `time.sleep(` | Chờ cố định vừa chậm vừa vẫn flaky |
-| `force=True` | Che đi phần tử mà người dùng không bấm được |
-| `:nth-child`, `nth=`, `.nth(`, `)[n]` trong test | Hỏng khi bố cục thay đổi |
-| CSS/XPath thô trong test | Locator phải nằm trong `pages/` |
-| Test thường thiếu `req()` / `risk()` | Làm mất truy vết |
+| Không `wait_for_timeout(` / `time.sleep(` | Chờ cố định vừa chậm vừa vẫn flaky |
+| Không `force=True` | Che đi phần tử mà người dùng không bấm được |
+| Không selector theo vị trí trong test | Hỏng khi bố cục thay đổi |
+| Không CSS/XPath thô trong test | Locator phải nằm trong `pages/` |
+| Test thường nào cũng có marker rủi ro (`@pytest.mark.R0x`) | Giữ `pytest -m R0x` đầy đủ |
 
 #### B4. Tiêu chí bảo trì (checklist)
 
-- [ ] Mọi requirement trong `dataset/requirements.json` có ít nhất một test (`reports/traceability.md`)
-- [ ] Gherkin vẫn declarative (`bdd_review.py` pass)
+- [ ] Rủi ro nào được automate (R01–R07, R09) cũng có ít nhất một test: `pytest -m R0x --collect-only -q`
+- [ ] Gherkin vẫn declarative (không URL, CSS, click, wait trong `tests/features/`)
 - [ ] Không có locator ngoài `pages/`
-- [ ] Không chờ cố định, không `force=True` (`stability_check.py` pass)
-- [ ] 0 test flaky trong 3 lần chạy liên tiếp (`flaky_report.md`)
+- [ ] Không chờ cố định, không `force=True` (lệnh tìm ở B3 không ra kết quả)
+- [ ] 0 test flaky trong 3 lần chạy liên tiếp (B2)
 - [ ] Mỗi lần fail đều có trace, ảnh và video
 - [ ] Bộ test pass với `-n auto`
 - [ ] Thông tin bí mật (`SAUCE_PASSWORD`, `.auth/`) không bao giờ đưa lên git
@@ -455,6 +450,6 @@ python run.py review     # 1. scripts/bdd_review.py (checklist Day 4 của Unit 
 
 | Kiểm tra | Kết quả trên site giả lập |
 | --- | --- |
-| `python run.py review` | 0 phát hiện ở cả hai bước |
-| `python run.py stability --runs 2` | 25 test, 0 flaky, 0 luôn fail |
+| Lệnh tìm ở B3 | không có kết quả |
+| 3 lần chạy `pytest` | mỗi lần 25 pass, 0 flaky |
 | Cố ý làm fail | `trace.zip`, `test-failed-1.png`, `video.webm` trong `test-results/` |

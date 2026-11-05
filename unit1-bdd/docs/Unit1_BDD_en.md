@@ -388,7 +388,7 @@ Reusable steps (e.g. `the customer is viewing the product "..."`, `the cart tota
 | REQ-07 | R06 | Medium | register.feature | Registration is rejected without an email; Registration succeeds (`@data-creating`) | Added on Day 3 |
 | REQ-08 | R07 | Medium | search.feature | Search returns matching products; Search with no matching products | Specified |
 
-Traceability goes through tags: every scenario carries a risk tag `@Rxx`, and `dataset/requirements.json` maps each requirement to its risk, so `behave --dry-run --tags=@R01` lists the scenarios behind REQ-01 and REQ-02.
+Traceability goes through tags: every scenario carries a risk tag `@Rxx`, and the requirement table in section 6 maps each requirement to its risk, so `behave --dry-run --tags=@R01` lists the scenarios behind REQ-01 and REQ-02.
 
 #### 7.2 Planned Python project structure (built on Day 2)
 
@@ -859,7 +859,7 @@ behave -f json.pretty -o reports/results.json \
        -f progress
 ```
 
-Putting `-f progress` first writes progress output into `results.json` and JSON into `report.html` – a common mistake. Day 3 wraps this command in `run.py`.
+Putting `-f progress` first writes progress output into `results.json` and JSON into `report.html` – a common mistake.
 
 View Allure with `allure serve reports/allure-results` (requires the Allure CLI).
 
@@ -902,7 +902,7 @@ These numbers come from a run against a local Shopify-structured mock store. On 
 
 #### 7.4 Bridge to Day 3
 
-Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, `search_steps.py`, and `run.py` (all reports in one command); traceability comes from the `@Rxx` risk tags.
+Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, and `search_steps.py`; traceability comes from the `@Rxx` risk tags.
 
 ---
 
@@ -921,9 +921,8 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 | Registration spec | `tests/features/register.feature` | REQ-07: negative case + `@data-creating` positive case |
 | Search spec | `tests/features/search.feature` | REQ-08: results / no results |
 | New steps | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
-| One-command runner | `run.py` | Tests + all reports |
-| Traceability | `@Rxx` risk tag on every scenario | `behave --dry-run --tags=@R02` lists the scenarios of a risk; `dataset/requirements.json` maps each requirement to its risk |
-| Shared data | `dataset/products.json`, `dataset/requirements.json` | Same data and requirement list for Unit 1 and Unit 2 |
+| Traceability | `@Rxx` risk tag on every scenario | `behave --dry-run --tags=@R02` lists the scenarios of a risk; the Day 1 requirement table maps each requirement to its risk |
+| Test data | `dataset/products.json` | Product names, handles, prices read by the steps |
 
 ### 2. Executable specifications
 
@@ -977,10 +976,11 @@ Every step calls a Page Object from `pages/`; no step contains a locator.
 ```bash
 cd sauce-demo-unit1-bdd
 pip install -r requirements.txt
-python run.py                         # default suite
-python run.py --tags=@smoke           # smoke only
-python run.py --tags=@data-creating   # creates a real account: only with trainer approval
-python run.py --allure                # also writes reports/allure-results
+behave                                # default suite (behave.ini: not @manual / @wip / @data-creating)
+behave --tags=@smoke                  # smoke only
+behave --tags=@data-creating          # creates a real account: only with trainer approval
+behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # HTML + JSON reports
+behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # Allure results
 ```
 
 | Output | Path |
@@ -996,7 +996,7 @@ python run.py --allure                # also writes reports/allure-results
 | Check | Result |
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
-| `python run.py` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
+| `behave` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
 | Traceability | `behave --dry-run --tags=@R01` … `@R07`: every automated risk lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
@@ -1005,7 +1005,7 @@ Verified against a local Shopify-structured mock of the store. On the live Sauce
 
 1. Add a scenario for REQ-02: changing the quantity to 0 removes the line. Which existing steps can you reuse?
 2. Add a scenario to `search.feature` that searches for "JACKET" (upper case). Does `behave --dry-run --tags=@R07` list it without code changes?
-3. Break one price in `dataset/products.json`, run `python run.py`, and find the failure screenshot.
+3. Break one price in `dataset/products.json`, run `behave`, and find the failure screenshot in `reports/screenshots/`.
 
 ---
 
@@ -1021,7 +1021,7 @@ The Day 3 framework scores 15/16 on the review rubric after the fixes made durin
 cd sauce-demo-unit1-bdd
 behave --dry-run                                   # undefined or ambiguous steps
 behave --dry-run --tags=@R02                       # scenarios behind one risk (repeat per risk)
-python run.py                                      # results + reports
+behave                                             # full run
 ```
 
 Quick searches for the checklist (PowerShell; use `grep -rnE` in Git Bash):
@@ -1038,11 +1038,11 @@ Review checklist:
 | --- | --- | --- |
 | Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in feature files | first search above |
 | Scenario size | At most 7 steps | read each feature |
-| Traceability | Every scenario has a risk tag `@Rxx` | `behave --dry-run --tags=@Rxx`; compare with `dataset/requirements.json` |
+| Traceability | Every scenario has a risk tag `@Rxx` | `behave --dry-run --tags=@Rxx`; compare with the Day 1 requirement table |
 | Step reuse | No unused, ambiguous or near-duplicate step definitions | `behave --dry-run` + read `tests/steps/` |
 | Stability | No `sleep()` in steps or pages | second search above |
 | Data separation | No prices hard-coded in step code | third search above |
-| Risk drives scope | Every Critical/High risk in `dataset/risk_register.csv` has a scenario | compare with the Day 1 risk table |
+| Risk drives scope | Every Critical/High risk in the Day 1 risk table has a scenario | compare with Day 1 section 2 |
 
 ### 2. Rubric
 
@@ -1052,7 +1052,7 @@ Review checklist:
 | Declarative Gherkin | 0 imperative steps | 2 |
 | Independence | Fresh browser per scenario (`before_scenario`) | 2 |
 | Step reuse | 0 unused, 0 ambiguous, 0 near-duplicates after F1 | 2 |
-| Traceability | 8/8 requirements, every scenario tagged; one requirement list (`dataset/requirements.json`) after F5 | 2 |
+| Traceability | 8/8 requirements, every scenario tagged; one requirement list (Day 1 section 6) after F5 | 2 |
 | Data separated from code | Names, handles, prices in `dataset/products.json` / Examples | 2 |
 | Reporting | HTML, JSON, JUnit, Allure, screenshot on failure | 2 |
 | Stability | Explicit waits only; not yet proven on 3 live runs (F3) | 1 |
@@ -1064,9 +1064,9 @@ Review checklist:
 | --- | --- | --- | --- |
 | F1 | `the cart should contain {count:d} item` and `... items` were two definitions | Merged into one regex step `items?` in `tests/steps/cart_steps.py` | Fixed |
 | F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
-| F3 | Stability not measured on the live site | Run `python run.py` 3 times; Unit 2 automates this (`run.py stability`) | Open → Unit 2 Day 8 |
+| F3 | Stability not measured on the live site | Run `behave` 3 times and compare the results; continued in Unit 2 Day 8 | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
-| F5 | Requirement list kept in more than one place (code and the Day 1 document) | Moved to `dataset/requirements.json`, read by Unit 1 and Unit 2 | Fixed |
+| F5 | Requirement list kept in more than one place (code and the Day 1 document) | Kept in one place: the Day 1 requirement table (section 6) | Fixed |
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
@@ -1098,7 +1098,6 @@ use_step_matcher("parse")
 | Unit 1 result | How Unit 2 uses it |
 | --- | --- |
 | Feature files | Run unchanged on Playwright via pytest-bdd |
-| `dataset/` data and requirements | Copied into the Unit 2 repo, plus REQ-09 and REQ-10 |
+| `dataset/products.json` | Copied into the Unit 2 repo |
 | Page Object pattern | Same class names, Playwright locators |
-| Day 4 review checklist | Automated in the Unit 2 repo (`run.py review`: Gherkin review + Playwright stability checks) |
 | Open F3 (stability) | Automated flaky detection on Day 8 |

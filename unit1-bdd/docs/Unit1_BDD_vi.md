@@ -388,7 +388,7 @@ Các step dùng lại được (ví dụ `the customer is viewing the product ".
 | REQ-07 | R06 | Medium | register.feature | Registration is rejected without an email; Registration succeeds (`@data-creating`) | Thêm ở Day 3 |
 | REQ-08 | R07 | Medium | search.feature | Search returns matching products; Search with no matching products | Đã đặc tả |
 
-Truy vết dựa vào tag: mỗi scenario mang tag rủi ro `@Rxx`, và `dataset/requirements.json` nối mỗi requirement với rủi ro của nó, nên `behave --dry-run --tags=@R01` liệt kê các scenario của REQ-01 và REQ-02.
+Truy vết dựa vào tag: mỗi scenario mang tag rủi ro `@Rxx`, và bảng requirement ở mục 6 nối mỗi requirement với rủi ro của nó, nên `behave --dry-run --tags=@R01` liệt kê các scenario của REQ-01 và REQ-02.
 
 #### 7.2 Cấu trúc project Python dự kiến (dựng ở Day 2)
 
@@ -859,7 +859,7 @@ behave -f json.pretty -o reports/results.json \
        -f progress
 ```
 
-Nếu để `-f progress` đầu tiên, nội dung progress sẽ bị ghi vào `results.json` và JSON bị ghi vào `report.html` – lỗi hay gặp. Day 3 gói lệnh này vào `run.py` để không phải nhớ.
+Nếu để `-f progress` đầu tiên, nội dung progress sẽ bị ghi vào `results.json` và JSON bị ghi vào `report.html` – lỗi hay gặp.
 
 Xem Allure: `allure serve reports/allure-results` (cần cài Allure CLI).
 
@@ -902,7 +902,7 @@ Các số trên đã chạy trên một site giả lập cấu trúc Shopify. Ch
 
 #### 7.4 Cầu nối sang Day 3
 
-Day 3 giữ nguyên kiến trúc này và thêm: `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (hoàn thành REQ-01…REQ-08), `product_steps.py`, `search_steps.py`, và `run.py` (mọi báo cáo một lệnh); truy vết dựa vào tag rủi ro `@Rxx`.
+Day 3 giữ nguyên kiến trúc này và thêm: `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (hoàn thành REQ-01…REQ-08), `product_steps.py`, và `search_steps.py`; truy vết dựa vào tag rủi ro `@Rxx`.
 
 ---
 
@@ -921,9 +921,8 @@ Day 3 hoàn thiện framework của Day 2: 6 feature file, 14 scenario (22 lần
 | Đặc tả đăng ký | `tests/features/register.feature` | REQ-07: case âm + case dương tag `@data-creating` |
 | Đặc tả tìm kiếm | `tests/features/search.feature` | REQ-08: có / không có kết quả |
 | Step mới | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, trang chi tiết, tìm kiếm |
-| Chạy một lệnh | `run.py` | Test + mọi báo cáo |
-| Truy vết | Tag rủi ro `@Rxx` trên mọi scenario | `behave --dry-run --tags=@R02` liệt kê scenario của một rủi ro; `dataset/requirements.json` nối mỗi requirement với rủi ro |
-| Dữ liệu dùng chung | `dataset/products.json`, `dataset/requirements.json` | Cùng dữ liệu và danh sách requirement cho Unit 1 và Unit 2 |
+| Truy vết | Tag rủi ro `@Rxx` trên mọi scenario | `behave --dry-run --tags=@R02` liệt kê scenario của một rủi ro; bảng requirement của Day 1 nối mỗi requirement với rủi ro |
+| Dữ liệu test | `dataset/products.json` | Tên, handle, giá sản phẩm mà step đọc |
 
 ### 2. Đặc tả chạy được
 
@@ -977,10 +976,11 @@ Mọi step gọi Page Object trong `pages/`; không step nào chứa locator.
 ```bash
 cd sauce-demo-unit1-bdd
 pip install -r requirements.txt
-python run.py                         # bộ mặc định
-python run.py --tags=@smoke           # chỉ smoke
-python run.py --tags=@data-creating   # tạo tài khoản thật: chỉ khi trainer cho phép
-python run.py --allure                # thêm reports/allure-results
+behave                                # bộ mặc định (behave.ini: bỏ @manual / @wip / @data-creating)
+behave --tags=@smoke                  # chỉ smoke
+behave --tags=@data-creating          # tạo tài khoản thật: chỉ khi trainer cho phép
+behave -f json.pretty -o reports/results.json -f html -o reports/report.html -f progress    # báo cáo HTML + JSON
+behave -f allure_behave.formatter:AllureFormatter -o reports/allure-results -f progress     # kết quả Allure
 ```
 
 | Đầu ra | Đường dẫn |
@@ -996,7 +996,7 @@ python run.py --allure                # thêm reports/allure-results
 | Kiểm tra | Kết quả |
 | --- | --- |
 | `behave --dry-run` | 0 step undefined |
-| `python run.py` | 6 feature, 21 scenario pass, 1 bỏ qua (`@data-creating`), 70 step pass |
+| `behave` | 6 feature, 21 scenario pass, 1 bỏ qua (`@data-creating`), 70 step pass |
 | Truy vết | `behave --dry-run --tags=@R01` … `@R07`: rủi ro nào được automate cũng có ít nhất một scenario |
 
 Đã chạy trên site giả lập cấu trúc Shopify. Trên Sauce Demo thật, nếu lệch locator thì chỉ sửa trong `pages/`.
@@ -1005,7 +1005,7 @@ python run.py --allure                # thêm reports/allure-results
 
 1. Thêm scenario cho REQ-02: đổi số lượng về 0 thì dòng bị xóa. Dùng lại được những step nào?
 2. Thêm vào `search.feature` một scenario tìm "JACKET" (chữ hoa). `behave --dry-run --tags=@R07` có liệt kê nó mà không sửa code không?
-3. Sửa sai một giá trong `dataset/products.json`, chạy `python run.py`, tìm ảnh chụp step fail.
+3. Sửa sai một giá trong `dataset/products.json`, chạy `behave`, tìm ảnh chụp step fail trong `reports/screenshots/`.
 
 ---
 
@@ -1021,7 +1021,7 @@ Framework Day 3 đạt 15/16 điểm rubric sau các chỗ sửa trong buổi re
 cd sauce-demo-unit1-bdd
 behave --dry-run                                   # step chưa có code hoặc bị mơ hồ
 behave --dry-run --tags=@R02                       # các scenario của một rủi ro (lặp cho từng rủi ro)
-python run.py                                      # kết quả + báo cáo
+behave                                             # chạy toàn bộ
 ```
 
 Lệnh tìm nhanh cho checklist (PowerShell; trong Git Bash dùng `grep -rnE`):
@@ -1038,11 +1038,11 @@ Checklist review:
 | --- | --- | --- |
 | Gherkin declarative | Không URL, CSS, XPath, click, wait, seconds trong feature | lệnh tìm thứ nhất |
 | Độ dài scenario | Tối đa 7 step | đọc từng feature |
-| Truy vết | Mọi scenario có tag rủi ro `@Rxx` | `behave --dry-run --tags=@Rxx`; đối chiếu `dataset/requirements.json` |
+| Truy vết | Mọi scenario có tag rủi ro `@Rxx` | `behave --dry-run --tags=@Rxx`; đối chiếu bảng requirement của Day 1 |
 | Tái sử dụng step | Không có step thừa, mơ hồ hoặc gần trùng | `behave --dry-run` + đọc `tests/steps/` |
 | Ổn định | Không `sleep()` trong steps hoặc pages | lệnh tìm thứ hai |
 | Tách dữ liệu | Không gõ cứng giá trong code step | lệnh tìm thứ ba |
-| Rủi ro dẫn dắt phạm vi | Mọi rủi ro Critical/High trong `dataset/risk_register.csv` có scenario | đối chiếu bảng rủi ro Day 1 |
+| Rủi ro dẫn dắt phạm vi | Mọi rủi ro Critical/High trong bảng rủi ro Day 1 có scenario | đối chiếu Day 1 mục 2 |
 
 ### 2. Rubric
 
@@ -1052,7 +1052,7 @@ Checklist review:
 | Gherkin declarative | 0 step imperative | 2 |
 | Độc lập | Trình duyệt mới mỗi scenario (`before_scenario`) | 2 |
 | Tái sử dụng step | 0 thừa, 0 mơ hồ, 0 gần trùng sau F1 | 2 |
-| Truy vết | 8/8 requirement, mọi scenario có tag; một danh sách requirement (`dataset/requirements.json`) sau F5 | 2 |
+| Truy vết | 8/8 requirement, mọi scenario có tag; một danh sách requirement (Day 1 mục 6) sau F5 | 2 |
 | Tách dữ liệu khỏi code | Tên, handle, giá nằm trong `dataset/products.json` / Examples | 2 |
 | Báo cáo | HTML, JSON, JUnit, Allure, ảnh khi fail | 2 |
 | Ổn định | Chỉ explicit wait; chưa chứng minh qua 3 lần chạy trên site thật (F3) | 1 |
@@ -1064,9 +1064,9 @@ Checklist review:
 | --- | --- | --- | --- |
 | F1 | `the cart should contain {count:d} item` và `... items` là hai định nghĩa | Gộp thành một step regex `items?` trong `tests/steps/cart_steps.py` | Đã sửa |
 | F2 | Locator viết theo cấu trúc Shopify chuẩn, chưa đối chiếu theme thật | Chạy trên site thật; nếu lệch chỉ sửa `pages/` | Mở |
-| F3 | Chưa đo độ ổn định trên site thật | Chạy `python run.py` 3 lần; Unit 2 tự động hóa (`run.py stability`) | Mở → Unit 2 Day 8 |
+| F3 | Chưa đo độ ổn định trên site thật | Chạy `behave` 3 lần và so kết quả; tiếp tục ở Unit 2 Day 8 | Mở → Unit 2 Day 8 |
 | F4 | Case đăng ký `@data-creating` mặc định không chạy | Xin trainer cho phép hoặc store riêng | Mở (trainer) |
-| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Chuyển sang `dataset/requirements.json`, Unit 1 và Unit 2 cùng đọc | Đã sửa |
+| F5 | Danh sách requirement nằm ở nhiều chỗ (code và tài liệu Day 1) | Chỉ giữ ở một chỗ: bảng requirement của Day 1 (mục 6) | Đã sửa |
 | F6 | Checkout dừng ở trang checkout | Thanh toán kiểm thủ công; Unit 2 thêm kiểm tra mức network | Chấp nhận |
 | F7 | Với theme không có ô số lượng, thêm N sản phẩm có thể làm hủy request POST trước đó (phát hiện khi kiểm tra lại cùng Unit 2) | `ProductPage._submit()` chờ chuyển sang `/cart` sau mỗi lần bấm | Đã sửa |
 | F8 | Update / Check Out / Sign In: step sau mở `/cart` trước khi POST của form chạy xong, nên đôi khi giỏ hàng giữ số lượng cũ (gặp 2 trong khoảng 15 lần chạy; ảnh chụp lỗi cho thấy `My Cart (1)` sau khi đổi thành 2) | Thêm `BasePage.submit()` chờ trang cũ bị thay thế (Selenium `staleness_of`); Unit 2 sửa tương tự (`expect_navigation`) | Đã sửa; 0 lỗi trong 10 lần chạy lặp |
@@ -1098,7 +1098,6 @@ use_step_matcher("parse")
 | Kết quả Unit 1 | Unit 2 dùng thế nào |
 | --- | --- |
 | Feature file | Chạy nguyên vẹn trên Playwright qua pytest-bdd |
-| Dữ liệu và requirement trong `dataset/` | Chép sang repo Unit 2, thêm REQ-09 và REQ-10 |
+| `dataset/products.json` | Chép sang repo Unit 2 |
 | Mẫu Page Object | Cùng tên class, locator Playwright |
-| Checklist review Day 4 | Được tự động hóa trong repo Unit 2 (`run.py review`: review Gherkin + kiểm tra ổn định Playwright) |
 | F3 còn mở (ổn định) | Phát hiện flaky tự động ở Day 8 |

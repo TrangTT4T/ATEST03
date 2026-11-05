@@ -1,7 +1,7 @@
 """Shared fixtures and hooks for the Playwright suite (Unit 2).
 
-Inherited from Unit 1: feature files, dataset/ test data, risk + requirement tags, Page Object pattern,
-one fresh browser state per scenario, screenshot on failure, traceability matrix.
+Inherited from Unit 1: feature files, dataset/products.json, risk tags (@Rxx), Page Object pattern,
+one fresh browser state per scenario, screenshot on failure.
 New in Unit 2: pytest fixtures instead of behave hooks, network control, tracing, auth state, xdist.
 
 Fixture map (Day 5-6):
@@ -14,8 +14,6 @@ Fixture map (Day 5-6):
 """
 import json
 import os
-import re
-from collections import defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urlparse
@@ -113,51 +111,3 @@ def customer_state(browser: Browser, base_url: str) -> Path:
     context.storage_state(path=str(AUTH_FILE))
     context.close()
     return AUTH_FILE
-
-
-# --- traceability report (requirement -> tests -> result) ------------------------
-_TRACE: dict[str, dict] = {}
-
-
-def pytest_collection_modifyitems(items):
-    # user_properties travel with every report, so this also works under pytest-xdist (-n).
-    # Gherkin tags arrive as markers named "REQ-01", "R01"; plain tests use req("..") / risk("..").
-    for item in items:
-        names = [m.name for m in item.iter_markers()]
-        reqs = sorted({n for n in names if re.fullmatch(r"REQ-\d+", n)} | {m.args[0] for m in item.iter_markers("req")})
-        risks = sorted({n for n in names if re.fullmatch(r"R\d+", n)} | {m.args[0] for m in item.iter_markers("risk")})
-        item.user_properties.append(("reqs", reqs or ["(none)"]))
-        item.user_properties.append(("risks", risks))
-
-
-def pytest_runtest_logreport(report):
-    props = dict(report.user_properties)
-    entry = _TRACE.setdefault(report.nodeid, {"reqs": props.get("reqs", ["(none)"]),
-                                              "risks": props.get("risks", []), "outcome": "not run"})
-    if report.when == "call" or report.outcome in ("failed", "skipped"):
-        if entry["outcome"] in ("not run", "passed"):
-            entry["outcome"] = report.outcome
-
-
-def pytest_sessionfinish(session):
-    if hasattr(session.config, "workerinput"):  # xdist worker: the controller writes the report
-        return
-    by_req = defaultdict(list)
-    for nodeid, entry in _TRACE.items():
-        for req in entry["reqs"]:
-            by_req[req].append((nodeid, ",".join(entry["risks"]), entry["outcome"]))
-    catalogue = json.loads((DATASET / "requirements.json").read_text(encoding="utf-8"))["requirements"]
-    lines = ["# Traceability matrix (Unit 2)", "", "| REQ | Requirement | Risk | Test | Result |",
-             "| --- | --- | --- | --- | --- |"]
-    for req in sorted(set(by_req) | set(catalogue)):
-        title = catalogue.get(req, {}).get("title", "(not in dataset/requirements.json)")
-        if req not in by_req:
-            lines.append(f"| {req} | {title} | {catalogue[req]['risk']} | **no test ran in this session** | - |")
-        for nodeid, risks, outcome in sorted(by_req.get(req, [])):
-            name = nodeid.split("::", 1)[-1].encode("ascii", "backslashreplace").decode("unicode_escape")
-            lines.append(f"| {req} | {title} | {risks} | `{name}` | {outcome} |")
-    covered = len(set(by_req) & set(catalogue))
-    lines += ["", f"Requirement coverage: {covered}/{len(catalogue)}."]
-    out = ROOT / "reports" / "traceability.md"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")

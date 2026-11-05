@@ -1,8 +1,8 @@
 # Unit 2 – Playwright End-to-End Automation (Sauce Demo)
 
-pytest + pytest-bdd + Playwright · Application under test: https://sauce-demo.myshopify.com · Code: this repository
+pytest + pytest-bdd + Playwright · Application under test: https://sauce-demo.myshopify.com · Code: `unit2-playwright/`
 
-Unit 2 builds on Unit 1: the same Gherkin feature files, test data, risk and requirement tags run on Playwright (Day 5), then gain tracing, network control, saved login and parallel runs (Day 6), are applied to the prioritised workflows in the lab (Day 7), and are made reliable with flaky-test control and stability checks (Day 8).
+Unit 2 builds on Unit 1: the same Gherkin feature files, test data and risk tags run on Playwright (Day 5), then gain tracing, network control, saved login and parallel runs (Day 6), are applied to the prioritised workflows in the lab (Day 7), and are made reliable with failure analysis and flaky-test control (Day 8). Everything runs with the `pytest` command.
 
 | Day | Content | LO | Delivery | Minutes | Format |
 | --- | --- | --- | --- | --- | --- |
@@ -14,29 +14,43 @@ Unit 2 builds on Unit 1: the same Gherkin feature files, test data, risk and req
 
 Contents: Day 5 – Architecture · Day 6 – Tracing, network, auth, parallel · Day 7 – Lab · Day 8 – Revision + reliability
 
+```text
+unit2-playwright/
+├── pytest.ini                   # base_url, features folder, tracing, reports, markers
+├── requirements.txt
+├── dataset/products.json        # same test data as Unit 1
+├── pages/                       # Playwright Page Objects (ported from Unit 1)
+└── tests/
+    ├── features/                # the Unit 1 Gherkin files, unchanged
+    ├── steps/shop_steps.py      # the Unit 1 step sentences on Playwright
+    ├── conftest.py              # fixtures: data, isolation, network control, auth state
+    ├── test_bdd_features.py     # runs every feature file (pytest-bdd)
+    ├── test_network.py          # interception, request assertion, fault injection, throttling
+    └── test_auth_state.py       # saved login + isolation check
+```
+
 ---
 
 ## Day 5 – Playwright Architecture: Browser Contexts, Locators, Fixtures, Assertions & Isolation
 
-Unit 2 · LO3 · Concept/Lecture · 120 min · Virtual · Code: repo `sauce-demo-unit2-playwright` (Python, pytest-playwright, pytest-bdd)
+Unit 2 · LO3 · Concept/Lecture · 120 min · Virtual
 
-Unit 2 keeps everything Unit 1 built and changes only the engine: the same 6 feature files, shared test data, risk and requirement tags now run on Playwright, and pytest fixtures replace behave hooks.
+Unit 2 keeps what Unit 1 built and changes the engine: the same 6 feature files and risk tags now run on Playwright, and pytest fixtures replace behave hooks.
 
 ### 1. What is inherited from Unit 1, what is new
 
 | Unit 1 (behave + Selenium) | Unit 2 (pytest + Playwright) | Status |
 | --- | --- | --- |
-| Unit 1 `tests/features/*.feature` | Copied unchanged into `tests/features/`, run by `tests/test_bdd_features.py` (pytest-bdd) | Inherited unchanged |
-| `dataset/products.json`, `requirements.json`, `risk_register.csv` | Same files | Inherited, REQ-09/REQ-10 added |
-| Tags `@REQ-xx`, `@Rxx`, `@critical`, `@smoke` | Become pytest markers: `pytest -m smoke`, `-m R01` | Inherited |
+| `tests/features/*.feature` | Same files in `tests/features/`, run by `tests/test_bdd_features.py` (pytest-bdd) | Inherited unchanged |
+| `dataset/products.json` | Same file | Inherited |
+| Tags `@Rxx`, `@critical`, `@smoke`, `@negative` | Become pytest markers: `pytest -m smoke`, `pytest -m R01` | Inherited |
 | Page Objects (`pages/`) | Same class names, Playwright `Locator` instead of `WebElement` | Ported |
 | Step definitions (`tests/steps/`) | `tests/steps/shop_steps.py`, same sentences | Ported |
-| `environment.py` hooks | `tests/conftest.py` fixtures | Replaced |
+| `tests/environment.py` hooks | `tests/conftest.py` fixtures | Replaced |
 | `WebDriverWait` explicit waits | Auto-waiting actions + retrying `expect()` | Replaced |
 | Fresh browser per scenario | Fresh **browser context** per test (much cheaper) | Improved |
 | Screenshot on failure | Screenshot + video + **trace** on failure | Extended (Day 6) |
-| Traceability matrix | Same idea, built inside pytest, works in parallel | Extended (Day 6) |
-| — | Network interception, auth state, parallel runs, flaky detection | New (Day 6–8) |
+| — | Network interception, saved auth state, parallel runs | New (Day 6) |
 
 ### 2. Playwright architecture
 
@@ -52,8 +66,6 @@ A context costs milliseconds, so every test gets a clean cart without restarting
 
 ### 3. Locators
 
-Locator order used in `pages/`:
-
 | Priority | Locator | Example in `pages/` |
 | --- | --- | --- |
 | 1 | Role + accessible name | `page.get_by_role("link", name=re.compile(r"My Cart \(\d+\)"))` |
@@ -61,7 +73,7 @@ Locator order used in `pages/`:
 | 3 | Text | `page.get_by_text("£60.00")` |
 | 4 | Stable attribute / form action | `form[action*='/cart/add']`, `input[name^='updates']` |
 | 5 | Filtered locator | `locator("tr, li, div").filter(has=get_by_role("link", name="Striped top"))` |
-| Never | Position | `:nth-child`, `xpath=(//a)[3]` (blocked by `scripts/stability_check.py`) |
+| Never | Position | `:nth-child`, `xpath=(//a)[3]` |
 
 ### 4. Fixtures (`tests/conftest.py`)
 
@@ -111,10 +123,10 @@ def cart_count(shop, count):
 ### 7. Run
 
 ```bash
-cd sauce-demo-unit2-playwright
+cd unit2-playwright
 pip install -r requirements.txt
 playwright install chromium
-pytest --collect-only -q          # 25 tests: 21 from Unit 1 features + 4 Playwright-only
+pytest --collect-only -q          # 25 tests: 21 from the Unit 1 features + 4 Playwright-only
 pytest -m smoke                   # same smoke tags as Unit 1
 pytest --headed --slowmo 300      # watch it run
 ```
@@ -130,9 +142,9 @@ pytest --headed --slowmo 300      # watch it run
 
 ## Day 6 – Tracing, Network Interception, Authentication State, Parallel Execution & Reporting
 
-Unit 2 · LO3 · Concept/Lecture · 120 min · Virtual · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Concept/Lecture · 120 min · Virtual
 
-Day 6 adds the five capabilities Unit 1 did not have: a full trace of every failed test, control over network traffic, login reuse, parallel runs, and reports that stay correct in parallel.
+Day 6 adds what Unit 1 did not have: a full trace of every failed test, control over network traffic, login reuse and parallel runs.
 
 ### 1. Tracing (extends Unit 1's screenshot on failure)
 
@@ -151,13 +163,10 @@ addopts =
 | `after_step` saves one PNG | `test-results/<test>/trace.zip`, `test-failed-1.png`, `video.webm` |
 | Shows the last screen only | Every action, DOM snapshot before/after, console, network, source line |
 
-Open a trace:
-
 ```bash
-playwright show-trace test-results/<test-folder>/trace.zip
+playwright show-trace test-results/<test-folder>/trace.zip   # open a trace
+pytest --tracing on                                          # keep traces for every test while debugging
 ```
-
-Force traces for every test while debugging: `pytest --tracing on`.
 
 ### 2. Network interception
 
@@ -183,18 +192,18 @@ def block_third_party(request, context: BrowserContext, base_url: str):
     yield blocked
 ```
 
-Allowed: the store host and `*.shopify.com`, `*.myshopify.com`, `*.shopifycdn.com`. Everything else (Facebook, Twitter, Pinterest, the Sauce app) is aborted. This turns risk R09 (manual in Unit 1) into REQ-09, tested automatically.
+Allowed: the store host and `*.shopify.com`, `*.myshopify.com`, `*.shopifycdn.com`. Everything else (Facebook, Twitter, Pinterest, the Sauce app) is aborted. Risk R09 (third-party widgets), manual in Unit 1, becomes testable.
 
 #### 2.2 The four network tests (`tests/test_network.py`)
 
-| Test | Technique | REQ / Risk |
+| Test | Technique | Risk |
 | --- | --- | --- |
-| `test_third_party_calls_are_blocked_and_shop_still_works` | `context.route` + abort, then the cart flow | REQ-09 / R09 |
-| `test_add_to_cart_posts_the_product_form` | `page.expect_request(...)`: assert method and body | REQ-01 / R01 |
-| `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: fault injection | REQ-01 / R01 |
-| `test_catalog_loads_on_a_slow_network` | Chromium CDP `Network.emulateNetworkConditions` (400 ms latency) | REQ-06 / R05 |
+| `test_third_party_calls_are_blocked_and_shop_still_works` | `context.route` + abort, then the cart flow | R09 |
+| `test_add_to_cart_posts_the_product_form` | `page.expect_request(...)`: assert method and body | R01 |
+| `test_failed_add_to_cart_request_does_not_add_the_product` | `page.route(...).fulfill(status=500)`: fault injection | R01 |
+| `test_catalog_loads_on_a_slow_network` | Chromium CDP `Network.emulateNetworkConditions` (400 ms latency) | R05 |
 
-Fault injection example:
+Plain tests carry the same risk markers as the Gherkin tags (`@pytest.mark.R01`), so `pytest -m R01` selects both.
 
 ```python
 page.route("**/cart/add*", lambda route: route.fulfill(status=500, body="Internal Server Error"))
@@ -225,23 +234,23 @@ def customer_state(browser: Browser, base_url: str) -> Path:
     return AUTH_FILE
 ```
 
-Used by `tests/test_auth_state.py` (REQ-10). `.auth/customer.json` holds a session: never commit it.
+Used by `tests/test_auth_state.py` (risk R04). `.auth/customer.json` holds a session: never commit it.
 
 ```bash
 # Linux/macOS
-SAUCE_EMAIL=you@example.com SAUCE_PASSWORD='...' python run.py auth
+SAUCE_EMAIL=you@example.com SAUCE_PASSWORD='...' pytest -m auth
 # Windows PowerShell
-$env:SAUCE_EMAIL="you@example.com"; $env:SAUCE_PASSWORD="..."; python run.py auth
+$env:SAUCE_EMAIL="you@example.com"; $env:SAUCE_PASSWORD="..."; pytest -m auth
 ```
 
 ### 4. Parallel execution
 
 ```bash
-python run.py parallel        # = pytest -n auto (pytest-xdist)
+pytest -n auto        # pytest-xdist, one worker per CPU
 pytest -n 4
 ```
 
-Parallel runs are safe because every test has its own context (Day 5) and no test depends on another. The shared demo store limits how far to push it: keep `-n` small on the live site.
+Safe because every test has its own context (Day 5) and no test depends on another. The demo store is shared: keep `-n` small on the live site.
 
 ### 5. Reporting patterns
 
@@ -250,36 +259,25 @@ Parallel runs are safe because every test has its own context (Day 5) and no tes
 | HTML | pytest-html (`--html` in `pytest.ini`) | `reports/report.html` |
 | JUnit XML | `--junitxml` | `reports/junit.xml` |
 | Trace, screenshot, video | pytest-playwright | `test-results/` |
-| Traceability matrix | hooks in `conftest.py` | `reports/traceability.md` |
 
-The traceability hooks read the Gherkin tags (`@REQ-01`, `@R01`) and the `req()` / `risk()` markers of plain tests. Under xdist the collection runs on the workers, so the ids travel in `item.user_properties` and the controller writes the matrix:
-
-```python
-def pytest_collection_modifyitems(items):
-    for item in items:
-        names = [m.name for m in item.iter_markers()]
-        reqs = sorted({n for n in names if re.fullmatch(r"REQ-\d+", n)} | {m.args[0] for m in item.iter_markers("req")})
-        risks = sorted({n for n in names if re.fullmatch(r"R\d+", n)} | {m.args[0] for m in item.iter_markers("risk")})
-        item.user_properties.append(("reqs", reqs or ["(none)"]))
-        item.user_properties.append(("risks", risks))
-```
+Selecting by risk replaces a separate traceability report: `pytest -m R01 --collect-only -q` lists every test behind risk R01, Gherkin or plain.
 
 ### 6. Review questions
 
 1. What does a trace show that a screenshot cannot?
 2. Why is `block_third_party` autouse, and how does a test opt out?
 3. Why must `customer_state` be session-scoped, and why must `.auth/` stay out of git?
-4. Why did the traceability matrix need `user_properties` once `-n` was used?
+4. Why is `pytest -n auto` safe for this suite?
 
 ---
 
 ## Day 7 – Playwright Implementation Lab: Prioritised End-to-End Workflows with Fixtures, Tracing & Network Control
 
-Unit 2 · LO3 · Assignment/Lab · 150 min · Hybrid · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Assignment/Lab · 150 min · Hybrid
 
-The lab automates the Unit 1 risk priorities on Playwright: 25 tests in the default run (21 Unit 1 scenarios + 4 network tests), 2 auth tests with credentials, 10/10 requirements traceable.
+The lab automates the Unit 1 risk priorities on Playwright: 25 tests in the default run (21 Unit 1 scenarios + 4 network tests), plus 2 auth tests with credentials.
 
-### 1. Prioritised workflows (from the Unit 1 risk register)
+### 1. Prioritised workflows (from the Unit 1 risk table)
 
 | Priority | Workflow | Risk | Tests | Unit 2 technique |
 | --- | --- | --- | --- | --- |
@@ -292,32 +290,29 @@ The lab automates the Unit 1 risk priorities on Playwright: 25 tests in the defa
 | P2 | Search | R07 Medium (9) | 2 scenarios | — |
 | P2 | Third-party failure does not break shopping | R09 Medium (6) | 1 network test | `block_third_party` route |
 
-R09 was manual in Unit 1 because the widgets are flaky; blocking them at the network layer makes the risk testable.
-
 ### 2. Files
 
 | File | Role |
 | --- | --- |
-| `tests/test_bdd_features.py` | `scenarios(".")` runs every file in `tests/features/` (Unit 1 feature files) |
+| `tests/test_bdd_features.py` | `scenarios(".")` runs every file in `tests/features/` |
 | `tests/steps/shop_steps.py` | Playwright implementation of every Unit 1 step |
-| `tests/conftest.py` | Fixtures, network control, auth state, traceability hooks |
+| `tests/conftest.py` | Fixtures, network control, auth state |
 | `tests/test_network.py` | Interception, request assertion, fault injection, throttling |
-| `tests/test_auth_state.py` | Saved login (REQ-10) and isolation check |
+| `tests/test_auth_state.py` | Saved login and isolation check |
 | `pages/` | Page Objects ported from Unit 1 |
 | `pytest.ini` | base URL, tracing, reports, default marker filter, features folder |
-| `run.py` | `smoke`, `parallel`, `auth`, `stability`, `review` modes |
 
 ### 3. Run the lab
 
 ```bash
-cd sauce-demo-unit2-playwright
+cd unit2-playwright
 pip install -r requirements.txt
 playwright install chromium
-python run.py                  # default suite
-python run.py smoke            # @smoke: add to cart + checkout
-python run.py parallel         # pytest -n auto
-python run.py auth             # needs SAUCE_EMAIL / SAUCE_PASSWORD
-pytest -m R01                  # every test for risk R01 (Gherkin tag or marker)
+pytest                              # default suite
+pytest -m smoke                     # @smoke: add to cart + checkout
+pytest -n auto                      # parallel
+pytest -m auth                      # needs SAUCE_EMAIL / SAUCE_PASSWORD
+pytest -m R01                       # every test for risk R01
 pytest -m "critical and not negative"
 ```
 
@@ -325,10 +320,9 @@ pytest -m "critical and not negative"
 
 | Check | Result |
 | --- | --- |
-| `python run.py` | 25 passed, 3 deselected (`@auth` ×2, `@data-creating` ×1) |
-| `python run.py parallel` | 25 passed, same traceability matrix |
-| `python run.py auth` (with an account) | 2 passed |
-| `reports/traceability.md` | REQ-01…REQ-09 covered in the default run; REQ-10 shown as "no test ran in this session" until `auth` runs |
+| `pytest` | 25 passed, 3 deselected (`@auth` ×2, `@data-creating` ×1) |
+| `pytest -n auto` | 25 passed |
+| `pytest -m auth` (with an account) | 2 passed |
 | Failed test | `test-results/<test>/trace.zip`, screenshot, video |
 
 Verified against a local Shopify-structured mock store. Against the live store, check locators first (Unit 1 finding F2).
@@ -337,22 +331,22 @@ Verified against a local Shopify-structured mock store. Against the live store, 
 
 1. Add a fault-injection test: the cart page answers 503. What should the customer see? Write the assertion.
 2. Make `test_catalog_loads_on_a_slow_network` fail by lowering the timeout to 1 s, then open its trace and find the slow request.
-3. Add a scenario to `tests/features/search.feature`. Run it here and in the Unit 1 repo: which code had to change? (Answer: none, unless the step sentence is new.)
-4. Run `python run.py parallel` three times and compare durations with the serial run.
+3. Add a scenario to `tests/features/search.feature`. Which code had to change? (Answer: none, unless the step sentence is new.)
+4. Run `pytest -n auto` three times and compare durations with the serial run.
 
 ---
 
 ## Day 8 – Topic Revision + Playwright Reliability & Maintainability: Failure Analysis, Flaky-Test Control, Tracing Diagnostics
 
-Unit 2 · LO3 · Guides/Review (60 min) + Concept/Lecture (120 min) · Virtual · Code: repo `sauce-demo-unit2-playwright`
+Unit 2 · LO3 · Guides/Review (60 min) + Concept/Lecture (120 min) · Virtual
 
-Day 8 closes both units: part A revises Unit 2 against Unit 1, part B turns stability from a manual check (Unit 1 finding F3) into automated tools: repeated runs with flaky classification, a static stability check, and a trace-driven failure analysis routine.
+Day 8 closes both units: part A revises Unit 2 against Unit 1, part B makes the suite reliable with a trace-driven failure analysis routine, repeated runs to expose flaky tests and a maintainability checklist.
 
 ### Part A – Topic revision (60 min)
 
 | Topic | Unit 1 (Day 1–4) | Unit 2 (Day 5–7) |
 | --- | --- | --- |
-| Specification | Gherkin features, risk + REQ tags | Same files, run by pytest-bdd |
+| Specification | Gherkin features, risk tags | Same files, run by pytest-bdd |
 | Engine | Selenium WebDriver | Playwright (auto-wait, contexts) |
 | Setup / teardown | behave hooks | pytest fixtures (`conftest.py`) |
 | Isolation | New browser per scenario | New context per test |
@@ -361,14 +355,13 @@ Day 8 closes both units: part A revises Unit 2 against Unit 1, part B turns stab
 | Network | Not controlled | Block, assert, fault-inject, throttle |
 | Login | UI login each time | Saved storage state |
 | Speed | Serial | `-n auto` parallel |
-| Traceability | `@REQ-xx` / `@Rxx` tags, `behave --tags` | Matrix built by pytest hooks (`reports/traceability.md`), parallel-safe |
-| Review | Day 4 checklist (by hand) | Automated: `bdd_review.py` + `stability_check.py` + flaky report |
+| Selection by risk | `behave --tags=@R01` | `pytest -m R01` |
 
 Revision questions:
 
 1. Which Unit 1 files does Unit 2 run without changes, and why is that useful?
 2. Name two risks whose test technique changed in Unit 2 and explain how.
-3. Which Unit 1 review findings are closed by Unit 2 tools? (F3 stability; F5 shared requirements; F7 and F8 found by the re-check.)
+3. Which Unit 1 review findings does Unit 2 address? (F3 stability; F7 and F8 form-submit races, fixed in both units.)
 
 ### Part B – Reliability and maintainability (120 min)
 
@@ -390,18 +383,19 @@ test fails
 
 #### B2. Flaky-test control
 
+Run the suite several times and compare; each run writes its own JUnit file:
+
 ```bash
-python run.py stability --runs 3      # runs the suite 3 times, writes reports/runs/run_N.xml
-                                      # then scripts/flaky_report.py → reports/flaky_report.md
+pytest --junitxml=reports/run_1.xml
+pytest --junitxml=reports/run_2.xml
+pytest --junitxml=reports/run_3.xml
 ```
 
-`scripts/flaky_report.py` classifies every test:
-
-| Status | Meaning | Action |
+| Result over the runs | Meaning | Action |
 | --- | --- | --- |
-| stable-pass | passed in every run | — |
-| stable-fail | failed in every run | real defect or broken test: analyse the trace |
-| flaky | passed in some runs, failed in others | quarantine, find the root cause |
+| passed every time | stable | — |
+| failed every time | real defect or broken test | analyse the trace (B1) |
+| passed some times, failed others | flaky | quarantine, find the root cause |
 
 Quarantine while the root cause is found (pytest-rerunfailures is installed):
 
@@ -411,7 +405,7 @@ def test_something_flaky(...):
     ...
 ```
 
-Reruns hide problems, so they are a temporary label, never a default `--reruns` for the whole suite.
+`pytest --reruns 1` on a whole run also exposes flaky tests: the HTML report marks them "rerun". Reruns hide problems, so they are a temporary label, never a default for the suite.
 
 Typical root causes and the fix used in this code:
 
@@ -421,32 +415,33 @@ Typical root causes and the fix used in this code:
 | Next action before the previous request ends | `BasePage.submit()` waits for the navigation after every form button; add-to-cart also waits for the `/cart/add` response (Unit 1 findings F7, F8: the failure screenshot showed the old cart) |
 | Third-party scripts | `block_third_party` autouse fixture |
 | Shared state between tests | One context per test; `test_auth_state_does_not_leak_into_other_tests` |
-| Positional selectors | Blocked by `stability_check.py` |
+| Positional selectors | Not used; role, text and stable attributes only |
 
-#### B3. Static stability check
+#### B3. Stability checks before a commit
 
-```bash
-python run.py review     # 1. scripts/bdd_review.py (Unit 1's Day 4 checklist, automated) on tests/features/ and tests/steps/
-                         # 2. scripts/stability_check.py on Unit 2 tests and pages
+Quick searches (PowerShell; use `grep -rnE` in Git Bash):
+
+```powershell
+Select-String -Path tests\*.py, tests\steps\*.py, pages\*.py -Pattern 'wait_for_timeout|time\.sleep'   # fixed waits
+Select-String -Path tests\*.py, tests\steps\*.py, pages\*.py -Pattern 'force=True'                     # forced clicks
+Select-String -Path tests\*.py, tests\steps\*.py -Pattern ':nth-child|nth=|\.nth\('                     # positional selectors
 ```
-
-`scripts/stability_check.py` fails (exit 1) on:
 
 | Rule | Why |
 | --- | --- |
-| `wait_for_timeout(` / `time.sleep(` | Fixed waits are slow and still flaky |
-| `force=True` | Hides elements that a user could not click |
-| `:nth-child`, `nth=`, `.nth(`, `)[n]` in tests | Breaks when the layout changes |
-| Raw CSS/XPath in tests | Locators belong in `pages/` |
-| Plain test without `req()` / `risk()` | Breaks traceability |
+| No `wait_for_timeout(` / `time.sleep(` | Fixed waits are slow and still flaky |
+| No `force=True` | Hides elements that a user could not click |
+| No positional selectors in tests | Breaks when the layout changes |
+| No raw CSS/XPath in tests | Locators belong in `pages/` |
+| Every plain test has a risk marker (`@pytest.mark.R0x`) | Keeps `pytest -m R0x` complete |
 
 #### B4. Maintainability criteria (checklist)
 
-- [ ] Every requirement in `dataset/requirements.json` has at least one test (`reports/traceability.md`)
-- [ ] Gherkin stays declarative (`bdd_review.py` passes)
+- [ ] Every automated risk (R01–R07, R09) has at least one test: `pytest -m R0x --collect-only -q`
+- [ ] Gherkin stays declarative (no URL, CSS, click or wait in `tests/features/`)
 - [ ] No locator outside `pages/`
-- [ ] No fixed waits, no `force=True` (`stability_check.py` passes)
-- [ ] 0 flaky tests in 3 consecutive runs (`flaky_report.md`)
+- [ ] No fixed waits, no `force=True` (B3 searches return nothing)
+- [ ] 0 flaky tests in 3 consecutive runs (B2)
 - [ ] Every failure leaves a trace, screenshot and video
 - [ ] Suite passes with `-n auto`
 - [ ] Secrets (`SAUCE_PASSWORD`, `.auth/`) are never committed
@@ -455,6 +450,6 @@ python run.py review     # 1. scripts/bdd_review.py (Unit 1's Day 4 checklist, a
 
 | Check | Result on the mock store |
 | --- | --- |
-| `python run.py review` | 0 findings in both checks |
-| `python run.py stability --runs 2` | 25 tests, 0 flaky, 0 always failing |
+| B3 searches | no matches |
+| 3 runs of `pytest` | 25 passed each time, 0 flaky |
 | Forced failure | `trace.zip`, `test-failed-1.png`, `video.webm` in `test-results/` |
