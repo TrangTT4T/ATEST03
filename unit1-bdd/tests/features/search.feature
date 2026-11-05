@@ -4,14 +4,14 @@ Feature: Product search
   I want to find products by keyword
   So that I do not have to browse the whole catalog
 
-  @REQ-08 @regression
+  @regression
   Scenario: Search returns matching products
     Given the customer is on the home page
     When the customer searches for "jacket"
     Then the results should include "Grey jacket"
     And the results should include "Noir jacket"
 
-  @REQ-08 @negative @regression
+  @negative @regression
   Scenario: Search with no matching products
     Given the customer is on the home page
     When the customer searches for "zzqxnotaproduct"

@@ -361,8 +361,8 @@ Day 8 closes both units: part A revises Unit 2 against Unit 1, part B turns stab
 | Network | Not controlled | Block, assert, fault-inject, throttle |
 | Login | UI login each time | Saved storage state |
 | Speed | Serial | `-n auto` parallel |
-| Traceability | `scripts/traceability.py` after the run | Built into pytest hooks, parallel-safe |
-| Review | `bdd_review.py` | Same script + `stability_check.py` + flaky report |
+| Traceability | `@REQ-xx` / `@Rxx` tags, `behave --tags` | Matrix built by pytest hooks (`reports/traceability.md`), parallel-safe |
+| Review | Day 4 checklist (by hand) | Automated: `bdd_review.py` + `stability_check.py` + flaky report |
 
 Revision questions:
 
@@ -426,7 +426,7 @@ Typical root causes and the fix used in this code:
 #### B3. Static stability check
 
 ```bash
-python run.py review     # 1. scripts/bdd_review.py (from Unit 1) on tests/features/ and tests/steps/
+python run.py review     # 1. scripts/bdd_review.py (Unit 1's Day 4 checklist, automated) on tests/features/ and tests/steps/
                          # 2. scripts/stability_check.py on Unit 2 tests and pages
 ```
 

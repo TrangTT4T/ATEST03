@@ -12,7 +12,7 @@ This repository is self-contained: it carries the BDD part of Unit 1 (the Gherki
 | `dataset/products.json`, `requirements.json`, `risk_register.csv` | REQ-09 (third-party failure), REQ-10 (saved login) |
 | Page Object pattern | `pages/` with Playwright locators (role/text first), auto-waiting |
 | Step sentences | `tests/steps/shop_steps.py` on Playwright |
-| `scripts/bdd_review.py` (Day 4 review) | Also reads pytest-bdd steps; `scripts/stability_check.py`, `scripts/flaky_report.py` |
+| Day 4 review checklist (done by hand in Unit 1) | Automated: `scripts/bdd_review.py`, `scripts/stability_check.py`, `scripts/flaky_report.py` |
 | Screenshot on failure, traceability matrix | Trace + video on failure; traceability inside pytest, parallel-safe |
 | — | Network interception, fault injection, throttling, saved auth state, parallel runs |
 
@@ -38,7 +38,7 @@ sauce-demo-unit2-playwright/
 │   └── test_auth_state.py
 ├── dataset/                     # Unit 1 test data + REQ-09/REQ-10
 ├── scripts/
-│   ├── bdd_review.py            # from Unit 1, extended for pytest-bdd
+│   ├── bdd_review.py            # Unit 1's Day 4 checklist, automated
 │   ├── stability_check.py
 │   └── flaky_report.py
 └── docs/Unit2_Playwright_vi.md, Unit2_Playwright_en.md

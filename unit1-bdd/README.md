@@ -6,10 +6,10 @@ Covers Day 1–4. The whole unit is documented in one file, with a section per d
 
 | Day | Topic | Section in the unit document | Code used |
 | --- | --- | --- | --- |
-| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `scripts/risk_score.py`, `dataset/risk_register.csv`, `tests/features/` |
+| 1 | Risk-based strategy, testability, BDD principles | Day 1 section | `dataset/risk_register.csv`, `tests/features/` |
 | 2 | Cucumber architecture: features, steps, hooks, tags, reporting | Day 2 section | `tests/features/cart.feature`, `login.feature`, `tests/environment.py`, `behave.ini`, `tests/steps/`, `pages/` |
-| 3 | Lab: executable specs, reusable steps, traceable reports | Day 3 section | all features, `run.py`, `scripts/traceability.py` |
-| 4 | Framework review | Day 4 section | `scripts/bdd_review.py` |
+| 3 | Lab: executable specs, reusable steps, traceable reports | Day 3 section | all features, `run.py` |
+| 4 | Framework review | Day 4 section | review checklist + `behave --dry-run` |
 
 ```text
 sauce-demo-unit1-bdd/
@@ -28,10 +28,6 @@ sauce-demo-unit1-bdd/
 │   ├── requirements.json
 │   └── risk_register.csv
 ├── helper_utility/helpers.py   # page(), product(): helpers shared by steps
-├── scripts/
-│   ├── risk_score.py           # Day 1
-│   ├── traceability.py         # Day 3
-│   └── bdd_review.py           # Day 4
 ├── reports/                    # generated
 └── docs/Unit1_BDD_vi.md, Unit1_BDD_en.md (+ images/)
 ```
@@ -44,8 +40,7 @@ behave --dry-run                    # every step implemented?
 python run.py                       # default suite (not @manual / @wip / @data-creating)
 python run.py --tags=@smoke
 python run.py --allure
-python scripts/risk_score.py        # → reports/risk_strategy.md
-python scripts/bdd_review.py .      # automated review rubric
+behave --dry-run --tags=@R02        # traceability: scenarios behind one risk (REQ → risk in dataset/requirements.json)
 ```
 
 Options: `BASE_URL`, `BROWSER=firefox`, `HEADLESS=false` (or `behave -D headless=false`). Chrome must be installed; Selenium Manager downloads chromedriver. Expected: 21 scenarios passed, 1 skipped (`@data-creating`), traceability 8/8.

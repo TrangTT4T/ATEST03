@@ -131,7 +131,6 @@ Sauce Demo is a Shopify store: the team has no source code or internal API, so t
 | `@regression`                     | All automated scenarios                               | Nightly                     |
 | `@critical` / `@high` / `@medium` | Risk level from section 2                             | Filter when time is limited |
 | `@R01` … `@R10`                   | Risk ID, for traceability                             | Coverage reporting          |
-| `@REQ-xx`                         | Requirement ID                                        | Traceability matrix         |
 | `@negative`                       | Negative case                                         | –                           |
 | `@data-creating`                  | Creates real data on the store                        | Only when permitted         |
 | `@wip`, `@manual`                 | Work in progress / manual only                        | Excluded from the pipeline  |
@@ -216,7 +215,7 @@ Scenario: add to cart
 Good (declarative, business-focused):
 
 ```gherkin
-@REQ-01 @R01 @critical @smoke
+@R01 @critical @smoke
 Scenario: Customer adds an in-stock product to the cart
   Given the customer is viewing the product "Grey jacket"
   When the customer adds the product to the cart
@@ -248,14 +247,14 @@ Feature: Shopping cart
   I want to manage products in my cart
   So that I can buy what I need
 
-  @REQ-01 @critical @smoke
+  @critical @smoke
   Scenario: Add an in-stock product to the cart
     Given the customer is viewing the product "Grey jacket"
     When the customer adds the product to the cart
     Then the cart should contain 1 item
     And the cart total should be "£55.00"
 
-  @REQ-01 @critical @regression
+  @critical @regression
   Scenario Outline: Cart total equals price times quantity
     Given the customer has <quantity> of "<product>" in the cart
     When the customer opens the cart
@@ -267,14 +266,14 @@ Feature: Shopping cart
       | Noir jacket | 2        | £120.00 |
       | Striped top | 3        | £150.00 |
 
-  @REQ-02 @critical @regression
+  @critical @regression
   Scenario: Change the quantity of a product in the cart
     Given the customer has 1 of "Bronze sandals" in the cart
     When the customer changes the quantity of "Bronze sandals" to 2
     Then the cart should contain 2 items
     And the cart total should be "£79.98"
 
-  @REQ-02 @critical @regression
+  @critical @regression
   Scenario: Remove the only product from the cart
     Given the customer has 1 of "Striped top" in the cart
     When the customer removes "Striped top" from the cart
@@ -290,7 +289,7 @@ Feature: Product information
   I want correct product names, prices and stock status
   So that I know what I am buying
 
-  @REQ-06 @R05 @high @regression
+  @R05 @high @regression
   Scenario Outline: Catalog shows correct price and stock status
     When the customer browses the full catalog
     Then the product "<product>" should be listed at its catalog price
@@ -306,13 +305,13 @@ Feature: Product information
       | Striped top    | available |
       | White sandals  | sold out  |
 
-  @REQ-04 @R03 @high @regression
+  @R03 @high @regression
   Scenario: Product page shows the catalog name and price
     Given the customer is viewing the product "Noir jacket"
     Then the product page should show the name "Noir jacket"
     And the product page should show the price "£60.00"
 
-  @REQ-04 @R03 @high @negative @regression
+  @R03 @high @negative @regression
   Scenario: A sold-out product cannot be added to the cart
     Given the customer is viewing the product "Brown Shades"
     Then the customer should not be able to add it to the cart
@@ -330,7 +329,7 @@ Feature: Customer login
   Background:
     Given the customer is on the login page
 
-  @REQ-05 @high @negative @regression
+  @high @negative @regression
   Scenario Outline: Login is rejected with invalid credentials
     When the customer logs in with email "<email>" and password "<password>"
     Then a login error should be shown
@@ -341,7 +340,7 @@ Feature: Customer login
       | not-a-user@example.com | wrongpass1 |
       | not-an-email           | wrongpass1 |
 
-  @REQ-05 @high @regression
+  @high @regression
   Scenario: Customer opens the password reset form
     When the customer chooses to reset the password
     Then the password reset form should be shown
@@ -356,14 +355,14 @@ Feature: Product search
   I want to find products by keyword
   So that I do not have to browse the whole catalog
 
-  @REQ-08 @regression
+  @regression
   Scenario: Search returns matching products
     Given the customer is on the home page
     When the customer searches for "jacket"
     Then the results should include "Grey jacket"
     And the results should include "Noir jacket"
 
-  @REQ-08 @negative @regression
+  @negative @regression
   Scenario: Search with no matching products
     Given the customer is on the home page
     When the customer searches for "zzqxnotaproduct"
@@ -389,7 +388,7 @@ Reusable steps (e.g. `the customer is viewing the product "..."`, `the cart tota
 | REQ-07 | R06 | Medium | register.feature | Registration is rejected without an email; Registration succeeds (`@data-creating`) | Added on Day 3 |
 | REQ-08 | R07 | Medium | search.feature | Search returns matching products; Search with no matching products | Specified |
 
-Traceability is automated through tags: every scenario carries `@REQ-xx` and `@Rxx`, and behave's JSON report is parsed on Day 3 to regenerate this matrix.
+Traceability goes through tags: every scenario carries a risk tag `@Rxx`, and `dataset/requirements.json` maps each requirement to its risk, so `behave --dry-run --tags=@R01` lists the scenarios behind REQ-01 and REQ-02.
 
 #### 7.2 Planned Python project structure (built on Day 2)
 
@@ -422,7 +421,7 @@ sauce-demo-unit1-bdd/
 | Declarative Gherkin      | No locators, URLs or `wait` in feature files                                     |                  |
 | Independence             | Each scenario runs on its own, regardless of order                               |                  |
 | Step reuse               | No two steps with the same meaning but different wording                         |                  |
-| Traceability             | Every scenario has `@REQ-xx` and `@Rxx`                                          |                  |
+| Traceability             | Every scenario has a risk tag `@Rxx`                                                  |                  |
 | Data separated from code | Prices, names, handles live in test data / Examples                              |                  |
 | Reporting                | HTML/JSON report, screenshots on failure                                         |                  |
 | Stability                | No `sleep`; three consecutive runs give the same result                          |                  |
@@ -444,7 +443,7 @@ Day 2 turns the Day 1 Gherkin specs into a runnable behave + Selenium framework:
 | Topic            | Cucumber/SpecFlow architecture, feature design, step definitions, hooks, tags, reporting patterns                                                                   |
 | AUT              | [Sauce Demo](https://sauce-demo.myshopify.com/)                                                                                                                     |
 | Stack            | Python 3.11+, behave 1.3 (Cucumber for Python), Selenium WebDriver 4, behave-html-formatter, allure-behave                                                          |
-| Input from Day 1 | Risk register, REQ-01…REQ-08, draft features tagged `@REQ-xx` / `@Rxx`                                                                                              |
+| Input from Day 1 | Risk register, REQ-01…REQ-08, draft features tagged with risks `@Rxx`                                                                                              |
 | Day 2 output     | A runnable starter framework; `behave --dry-run` reports no undefined steps; cart + login run for real                                                              |
 | Scope            | REQ-01, REQ-02 (cart, R01 Critical) and REQ-05 (login, R04 High) – the two highest risks that can be fully automated. The remaining requirements are done on Day 3. |
 
@@ -502,7 +501,7 @@ Each feature file covers one business capability; Feature-level tags apply to ev
 | `Background`                        | A Given repeated in every scenario of the file | `Given the customer is on the login page` |
 | `Scenario`                          | One concrete example                           | Add an in-stock product to the cart       |
 | `Scenario Outline` + `Examples`     | Same behaviour, several data sets              | 2 × Noir jacket, 3 × Striped top          |
-| `@tag`                              | Classifying for filtering and traceability     | `@REQ-01 @critical @smoke`                |
+| `@tag`                              | Classifying for filtering and traceability     | `@R01 @critical @smoke`                |
 
 `tests/features/cart.feature`:
 
@@ -513,14 +512,14 @@ Feature: Shopping cart
   I want to manage products in my cart
   So that I can buy what I need
 
-  @REQ-01 @critical @smoke
+  @critical @smoke
   Scenario: Add an in-stock product to the cart
     Given the customer is viewing the product "Grey jacket"
     When the customer adds the product to the cart
     Then the cart should contain 1 item
     And the cart total should be "£55.00"
 
-  @REQ-01 @critical @regression
+  @critical @regression
   Scenario Outline: Cart total equals price times quantity
     Given the customer has <quantity> of "<product>" in the cart
     When the customer opens the cart
@@ -532,14 +531,14 @@ Feature: Shopping cart
       | Noir jacket | 2        | £120.00 |
       | Striped top | 3        | £150.00 |
 
-  @REQ-02 @critical @regression
+  @critical @regression
   Scenario: Change the quantity of a product in the cart
     Given the customer has 1 of "Bronze sandals" in the cart
     When the customer changes the quantity of "Bronze sandals" to 2
     Then the cart should contain 2 items
     And the cart total should be "£79.98"
 
-  @REQ-02 @critical @regression
+  @critical @regression
   Scenario: Remove the only product from the cart
     Given the customer has 1 of "Striped top" in the cart
     When the customer removes "Striped top" from the cart
@@ -558,7 +557,7 @@ Feature: Customer login
   Background:
     Given the customer is on the login page
 
-  @REQ-05 @high @negative @regression
+  @high @negative @regression
   Scenario Outline: Login is rejected with invalid credentials
     When the customer logs in with email "<email>" and password "<password>"
     Then a login error should be shown
@@ -569,7 +568,7 @@ Feature: Customer login
       | not-a-user@example.com | wrongpass1 |
       | not-an-email           | wrongpass1 |
 
-  @REQ-05 @high @regression
+  @high @regression
   Scenario: Customer opens the password reset form
     When the customer chooses to reset the password
     Then the password reset form should be shown
@@ -800,7 +799,7 @@ Tags do three jobs: select which scenarios run, steer hooks (skip `@manual`), an
 |--------------|-------------------------------------|-------------------------------------------|
 | Suite        | `@smoke`, `@regression`             | Add an in-stock product = `@smoke`        |
 | Risk level   | `@critical`, `@high`, `@medium`     | Cart `@critical`, login `@high`           |
-| Traceability | `@R01`…`@R10`, `@REQ-01`…`@REQ-08`  | `@R01` + `@REQ-01/02`; `@R04` + `@REQ-05` |
+| Traceability | `@R01`…`@R10` | `@R01` (cart), `@R04` (login) |
 | Case type    | `@negative`                         | Invalid login                             |
 | Control      | `@manual`, `@wip`, `@data-creating` | Excluded by default                       |
 | Capability   | `@cart`, `@login`                   | Feature-level tags                        |
@@ -810,7 +809,7 @@ Filter expressions (behave 1.3, tag expressions v2):
 ```bash
 behave --tags=@smoke                                  # smoke only
 behave --tags="@critical and not @negative"           # critical, no negative cases
-behave --tags="@REQ-01 or @REQ-05"                    # by requirement
+behave --tags="@R01 or @R04"                          # by risk (several risks)
 behave --tags=@R01                                    # by risk
 behave --tags="@data-creating or not @data-creating"  # everything, overriding the default
 ```
@@ -885,7 +884,7 @@ Requires Python 3.11+ and Chrome; Selenium Manager downloads chromedriver automa
 |--------------------------------------------------------|-----------------------------------------------------------------------|
 | `behave --dry-run`                                     | 0 undefined steps                                                     |
 | `behave`                                               | 2 features, 8 scenarios, 30 steps passed                              |
-| Automated review (`python scripts/bdd_review.py .`) | 0 findings: the `item`/`items` duplicate that the Day 4 review found is already merged into one regex step (finding F1) |
+| Step reuse | The `item`/`items` duplicate found in the Day 4 review is already merged into one regex step (finding F1) |
 
 These numbers come from a run against a local Shopify-structured mock store. On the live Sauce Demo, if a step fails because of a locator, fix it only in `pages/`.
 
@@ -903,7 +902,7 @@ These numbers come from a run against a local Shopify-structured mock store. On 
 
 #### 7.4 Bridge to Day 3
 
-Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, `search_steps.py`, `run.py` (all reports in one command) and `scripts/traceability.py` (traceability matrix from tags).
+Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `register.feature`, `search.feature` (completing REQ-01…REQ-08), `product_steps.py`, `search_steps.py`, and `run.py` (all reports in one command); traceability comes from the `@Rxx` risk tags.
 
 ---
 
@@ -911,7 +910,7 @@ Day 3 keeps this architecture and adds `checkout.feature`, `product.feature`, `r
 
 Unit 1 · LO2 · Assignment/Lab · 150 min · Hybrid · Code: repo `sauce-demo-unit1-bdd` (behave + Selenium)
 
-Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with Examples) cover all 8 Unit 1 requirements, and one command produces HTML/JSON/JUnit/Allure reports plus a traceability matrix generated from tags.
+Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with Examples) cover all 8 Unit 1 requirements, one command produces HTML/JSON/JUnit/Allure reports, and the `@Rxx` risk tags keep every scenario traceable.
 
 ### 1. What is added on top of Day 2
 
@@ -922,8 +921,8 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 | Registration spec | `tests/features/register.feature` | REQ-07: negative case + `@data-creating` positive case |
 | Search spec | `tests/features/search.feature` | REQ-08: results / no results |
 | New steps | `tests/steps/product_steps.py`, `search_steps.py` | Catalog, detail page, search |
-| One-command runner | `run.py` | Tests + all reports + traceability |
-| Traceability | `scripts/traceability.py` | REQ → Risk → feature → scenario → result, from `@REQ-xx` / `@Rxx` tags |
+| One-command runner | `run.py` | Tests + all reports |
+| Traceability | `@Rxx` risk tag on every scenario | `behave --dry-run --tags=@R02` lists the scenarios of a risk; `dataset/requirements.json` maps each requirement to its risk |
 | Shared data | `dataset/products.json`, `dataset/requirements.json` | Same data and requirement list for Unit 1 and Unit 2 |
 
 ### 2. Executable specifications
@@ -940,7 +939,7 @@ Day 3 completes the Day 2 framework: 6 feature files, 14 scenarios (22 runs with
 Example of a data-driven spec (`tests/features/product.feature`):
 
 ```gherkin
-@REQ-06 @R05 @high @regression
+@R05 @high @regression
 Scenario Outline: Catalog shows correct price and stock status
   When the customer browses the full catalog
   Then the product "<product>" should be listed at its catalog price
@@ -991,7 +990,6 @@ python run.py --allure                # also writes reports/allure-results
 | JUnit XML (CI) | `reports/junit/*.xml` |
 | Allure results | `reports/allure-results/` (`allure serve reports/allure-results`) |
 | Screenshots of failed steps | `reports/screenshots/` |
-| Traceability matrix | `reports/traceability.md`, `reports/traceability.csv` |
 
 ### 6. Expected results
 
@@ -999,14 +997,14 @@ python run.py --allure                # also writes reports/allure-results
 | --- | --- |
 | `behave --dry-run` | 0 undefined steps |
 | `python run.py` | 6 features, 21 scenarios passed, 1 skipped (`@data-creating`), 70 steps passed |
-| Traceability | 8/8 Unit 1 requirements covered, 0 scenarios without `@REQ` tag |
+| Traceability | `behave --dry-run --tags=@R01` … `@R07`: every automated risk lists at least one scenario |
 
 Verified against a local Shopify-structured mock of the store. On the live Sauce Demo, a locator mismatch is fixed only in `pages/`.
 
 ### 7. Lab exercises
 
 1. Add a scenario for REQ-02: changing the quantity to 0 removes the line. Which existing steps can you reuse?
-2. Add an `@REQ-08` scenario that searches for "JACKET" (upper case). Does the traceability matrix pick it up without code changes?
+2. Add a scenario to `search.feature` that searches for "JACKET" (upper case). Does `behave --dry-run --tags=@R07` list it without code changes?
 3. Break one price in `dataset/products.json`, run `python run.py`, and find the failure screenshot.
 
 ---
@@ -1021,21 +1019,30 @@ The Day 3 framework scores 15/16 on the review rubric after the fixes made durin
 
 ```bash
 cd sauce-demo-unit1-bdd
-python scripts/bdd_review.py .     # automated rubric checks, exit code 1 when anything is found
-python scripts/risk_score.py       # re-check scope against the risk register (dataset/risk_register.csv)
-python run.py                      # results + traceability matrix
+behave --dry-run                                   # undefined or ambiguous steps
+behave --dry-run --tags=@R02                       # scenarios behind one risk (repeat per risk)
+python run.py                                      # results + reports
 ```
 
-`scripts/bdd_review.py` checks:
+Quick searches for the checklist (PowerShell; use `grep -rnE` in Git Bash):
 
-| Check | Rule |
-| --- | --- |
-| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in feature files |
-| Scenario size | At most 7 steps |
-| Traceability | Every scenario has `@REQ-xx` and `@Rxx` |
-| Step reuse | No unused, ambiguous or near-duplicate step definitions (parse and `re` matchers) |
-| Stability | No `sleep()` in steps or pages |
-| Data separation | No prices hard-coded in step code |
+```powershell
+Select-String -Path tests\features\*.feature -Pattern 'https?://|click|wait|xpath|css|seconds'   # imperative Gherkin
+Select-String -Path tests\steps\*.py, pages\*.py -Pattern 'sleep\('                            # fixed waits
+Select-String -Path tests\steps\*.py -Pattern '£\d'                                            # prices in step code
+```
+
+Review checklist:
+
+| Check | Rule | How |
+| --- | --- | --- |
+| Declarative Gherkin | No URL, CSS, XPath, click, wait or seconds in feature files | first search above |
+| Scenario size | At most 7 steps | read each feature |
+| Traceability | Every scenario has a risk tag `@Rxx` | `behave --dry-run --tags=@Rxx`; compare with `dataset/requirements.json` |
+| Step reuse | No unused, ambiguous or near-duplicate step definitions | `behave --dry-run` + read `tests/steps/` |
+| Stability | No `sleep()` in steps or pages | second search above |
+| Data separation | No prices hard-coded in step code | third search above |
+| Risk drives scope | Every Critical/High risk in `dataset/risk_register.csv` has a scenario | compare with the Day 1 risk table |
 
 ### 2. Rubric
 
@@ -1059,7 +1066,7 @@ python run.py                      # results + traceability matrix
 | F2 | Locators written against standard Shopify markup, not yet checked on the live theme | Run on the live store; fix only `pages/` if needed | Open |
 | F3 | Stability not measured on the live site | Run `python run.py` 3 times; Unit 2 automates this (`run.py stability`) | Open → Unit 2 Day 8 |
 | F4 | `@data-creating` registration excluded by default | Ask trainer for permission or a disposable store | Open (trainer) |
-| F5 | Requirement list duplicated in `traceability.py` and the Day 1 document | Moved to `dataset/requirements.json`, read by Unit 1 and Unit 2 | Fixed |
+| F5 | Requirement list kept in more than one place (code and the Day 1 document) | Moved to `dataset/requirements.json`, read by Unit 1 and Unit 2 | Fixed |
 | F6 | Checkout stops at the checkout page | Payment stays manual; network-level checks added in Unit 2 | Accepted |
 | F7 | On a theme without a quantity box, adding N items could cancel the previous POST (found when re-checking with Unit 2) | `ProductPage._submit()` now waits for the redirect to `/cart` after every click | Fixed |
 | F8 | Update / Check Out / Sign In: the next step opened `/cart` before the form POST finished, so the cart sometimes kept its old quantity (seen in 2 of ~15 runs; the failure screenshot showed `My Cart (1)` after changing to 2) | New `BasePage.submit()` waits until the old page is replaced (Selenium `staleness_of`); Unit 2 got the same fix (`expect_navigation`) | Fixed; 0 failures in 10 repeated runs |
@@ -1093,5 +1100,5 @@ use_step_matcher("parse")
 | Feature files | Run unchanged on Playwright via pytest-bdd |
 | `dataset/` data and requirements | Copied into the Unit 2 repo, plus REQ-09 and REQ-10 |
 | Page Object pattern | Same class names, Playwright locators |
-| Review script | `run.py review` in the Unit 2 repo runs it, then adds Playwright stability checks |
+| Day 4 review checklist | Automated in the Unit 2 repo (`run.py review`: Gherkin review + Playwright stability checks) |
 | Open F3 (stability) | Automated flaky detection on Day 8 |

@@ -1,4 +1,4 @@
-"""One-command runner: tests + HTML/JSON/JUnit reports + traceability matrix.
+"""One-command runner: tests + HTML/JSON/JUnit reports.
 
     python run.py                     # default suite (behave.ini tags: no @manual/@wip/@data-creating)
     python run.py --tags=@smoke       # any extra behave arguments are passed through
@@ -24,8 +24,7 @@ def main():
         cmd += ["-f", "allure_behave.formatter:AllureFormatter", "-o", str(REPORTS / "allure-results")]
     cmd += ["-f", "progress", *args]
     code = subprocess.call(cmd, cwd=ROOT)
-    subprocess.call([sys.executable, str(ROOT / "scripts" / "traceability.py")], cwd=ROOT)
-    print(f"\nReports: {REPORTS / 'report.html'} | traceability: {REPORTS / 'traceability.md'}")
+    print(f"\nReports: {REPORTS / 'report.html'} | {REPORTS / 'results.json'}")
     sys.exit(code)
 
 

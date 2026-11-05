@@ -361,8 +361,8 @@ Day 8 khép lại cả hai Unit: phần A ôn tập Unit 2 so với Unit 1; ph�
 | Network | Không kiểm soát | Chặn, kiểm tra, giả lập lỗi, giả lập chậm |
 | Đăng nhập | Đăng nhập qua UI mỗi lần | Dùng lại storage state đã lưu |
 | Tốc độ | Tuần tự | Song song `-n auto` |
-| Truy vết | `scripts/traceability.py` sau khi chạy | Nằm trong hook pytest, đúng cả khi song song |
-| Review | `bdd_review.py` | Cùng script + `stability_check.py` + báo cáo flaky |
+| Truy vết | Tag `@REQ-xx` / `@Rxx`, `behave --tags` | Ma trận do hook pytest tạo (`reports/traceability.md`), đúng cả khi song song |
+| Review | Checklist Day 4 (làm tay) | Tự động: `bdd_review.py` + `stability_check.py` + báo cáo flaky |
 
 Câu hỏi ôn tập:
 
@@ -426,7 +426,7 @@ Nguyên nhân hay gặp và cách code này xử lý:
 #### B3. Kiểm tra tĩnh độ ổn định
 
 ```bash
-python run.py review     # 1. scripts/bdd_review.py (từ Unit 1) trên tests/features/ và tests/steps/
+python run.py review     # 1. scripts/bdd_review.py (checklist Day 4 của Unit 1, tự động hóa) trên tests/features/ và tests/steps/
                          # 2. scripts/stability_check.py trên test và pages của Unit 2
 ```
 
