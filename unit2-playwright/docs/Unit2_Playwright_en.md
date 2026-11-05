@@ -70,7 +70,7 @@ Locator order used in `pages/`:
 | `browser`, `context`, `page` | session / test / test | `before_scenario` + `after_scenario` | Provided by pytest-playwright |
 | `browser_context_args` | session | `_make_driver()` options | Viewport 1366×900, locale en-GB |
 | `products` | session | `before_all` loading JSON | Reads `dataset/products.json` |
-| `shop` | test | `support/helpers.page()` | All Page Objects bound to this test's page |
+| `shop` | test | `helper_utility/helpers.page()` | All Page Objects bound to this test's page |
 | `cart_with` | test | Given step code | Factory: `cart_with("Noir jacket", 2)` |
 | `block_third_party` | test, autouse | — | Network control (Day 6) |
 | `customer_state` | session | — | Saved login (Day 6) |

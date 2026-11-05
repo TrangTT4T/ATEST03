@@ -70,7 +70,7 @@ Thứ tự ưu tiên trong `pages/`:
 | `browser`, `context`, `page` | session / test / test | `before_scenario` + `after_scenario` | pytest-playwright cung cấp |
 | `browser_context_args` | session | option trong `_make_driver()` | Viewport 1366×900, locale en-GB |
 | `products` | session | `before_all` đọc JSON | Đọc `dataset/products.json` |
-| `shop` | test | `support/helpers.page()` | Mọi Page Object gắn với page của test |
+| `shop` | test | `helper_utility/helpers.page()` | Mọi Page Object gắn với page của test |
 | `cart_with` | test | code của step Given | Factory: `cart_with("Noir jacket", 2)` |
 | `block_third_party` | test, autouse | — | Kiểm soát network (Day 6) |
 | `customer_state` | session | — | Lưu trạng thái đăng nhập (Day 6) |
